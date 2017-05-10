@@ -1,7 +1,15 @@
 #include "Camera.h"
 
-Camera::Camera()
+Camera::Camera(QVector3D position, QVector3D viewedPos, QVector3D viewUp, float fieldOfView)
+:m_position(position), m_viewedPosition(viewedPos), m_viewUp(viewUp), m_fieldOfView(fieldOfView)
 {
+	m_position = position;
+	m_viewedPosition = viewedPos;
+	m_viewDir = QVector3D(m_viewedPosition - m_position);
+	m_viewDir.normalize();
+	m_viewUp = viewUp;
+	m_fieldOfView = fieldOfView; // in degrees
+
 	// rotation matrix with 10 degree
 	float rotateWithDegree = 5;
 	//float rotateWithDegree = 90;
@@ -12,11 +20,6 @@ Camera::Camera()
 	rotatorAroundXCClock.rotate(rotateWithDegree, 0.1, 0.0, 0.0);
 	rotatorAroundYCClock.rotate(rotateWithDegree, 0.0, 1.0, 0.0);
 	rotatorAroundZCClock.rotate(rotateWithDegree, 0.0, 0.0, 0.1);
-}
-
-Camera::Camera(QVector3D position, QVector3D viewDir, QVector3D viewUp, QVector3D viewSide)
-:m_position(position), m_viewDir(viewDir), m_viewUp(viewUp), m_viewSide(viewSide), m_fieldOfView(90.)
-{
 
 }
 
@@ -91,4 +94,5 @@ void Camera::RotateAroundZCClock()
 	m_position -= m_viewedPosition;
 	m_position = rotatorAroundZCClock * m_position;
 	m_position += m_viewedPosition;
+
 }

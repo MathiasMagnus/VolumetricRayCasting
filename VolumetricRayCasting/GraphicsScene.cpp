@@ -6,6 +6,9 @@ GraphicsScene::GraphicsScene(QObject *parent) :
 {
 	m_graphicsPixmapItem = new QGraphicsPixmapItem();
 	addItem(m_graphicsPixmapItem);
+
+	m_imageWidth = 400;
+	m_imageHeight = 300;
 }
 
 GraphicsScene::~GraphicsScene()
@@ -16,21 +19,22 @@ GraphicsScene::~GraphicsScene()
 void GraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent)
 {
 	int delta = wheelEvent->delta() / 120; 
-	QVector3D newCameraPos = rayCastScene.GetCameraPos();
-	newCameraPos.setZ(newCameraPos.z() + newCameraPos.z() / (10.0 * delta * copysignf(1.0, rayCastScene.GetCameraViewDir().z())));
-	newCameraPos.setY(newCameraPos.y() + newCameraPos.y() / (10.0 * delta * copysignf(1.0, rayCastScene.GetCameraViewDir().y())));
-	newCameraPos.setX(newCameraPos.x() + newCameraPos.x() / (10.0 * delta * copysignf(1.0, rayCastScene.GetCameraViewDir().x())));
+	QVector3D newCameraPos = m_camera.GetPosition();
+	newCameraPos.setZ(newCameraPos.z() + newCameraPos.z() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().z())));
+	newCameraPos.setY(newCameraPos.y() + newCameraPos.y() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().y())));
+	newCameraPos.setX(newCameraPos.x() + newCameraPos.x() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().x())));
 	
-	RaycastFromCameraPos(newCameraPos);
+	m_camera.SetPosition(newCameraPos);
+	Raycast();
 
-	//QGraphicsScene::wheelEvent(wheelEvent); // do I need this?
+	//QGraphicsScene::wheelEvent(wheelEvent); // ?
 }
 
 void GraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mousePressEvent)
 {
 	origPoint = mousePressEvent->scenePos();
 	
-	//QGraphicsScene::mousePressEvent(mousePressEvent);
+	//QGraphicsScene::mousePressEvent(mousePressEvent); 
 }
 
 void GraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseMoveEvent)
@@ -42,25 +46,21 @@ void GraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseMoveEvent)
 		
 		if (delta.x() > 0)
 		{
-			//for (int i = 0; i < std::abs(int(delta.x())); i++)
-				rayCastScene.m_camera.RotateAroundYClock();
+				m_camera.RotateAroundYClock();
 		}
 		else if (delta.x() < 0 )
 		{
-			//for (int i = 0; i < std::abs(int(delta.x())); i++)
-				rayCastScene.m_camera.RotateAroundYCClock();
+				m_camera.RotateAroundYCClock();
 		}
 		
 		if (delta.y() > 0 )
 		{
-			//for (int i = 0; i < std::abs(int(delta.y())); i++)
-				rayCastScene.m_camera.RotateAroundXClock();		
+				m_camera.RotateAroundXClock();		
 		}
 
 		else if (delta.y() < 0)
 		{
-			//for (int i = 0; i < std::abs(int(delta.y())); i++)
-				rayCastScene.m_camera.RotateAroundXCClock();
+				m_camera.RotateAroundXCClock();
 		}
 
 		origPoint = movingPoint;
@@ -74,47 +74,27 @@ void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseReleaseEven
 {
 }
 
-static int kkk = 0;
 void GraphicsScene::keyPressEvent(QKeyEvent *event)
 {
-	kkk++;
-	std::cout << kkk << endl;
+	
 	if ( Qt::Key_Up  == event->key())
-		rayCastScene.m_camera.RotateAroundXCClock();
+		m_camera.RotateAroundXCClock();
 	else if (Qt::Key_Down == event->key())
-		rayCastScene.m_camera.RotateAroundXClock();
+		m_camera.RotateAroundXClock();
 	else if (Qt::Key_Left == event->key())
-		rayCastScene.m_camera.RotateAroundYCClock();
+		m_camera.RotateAroundYCClock();
 	else if (Qt::Key_Right == event->key())
-		rayCastScene.m_camera.RotateAroundYClock();
-			
+		m_camera.RotateAroundYClock();
+	
 	Raycast();
 }
 
-void GraphicsScene::SetScene(const SceneData &sceneData)
-{
-	// Init with camera position, viewed posisiton, field of view
-	rayCastScene.Init(sceneData.cameraPositionData, sceneData.viewedPosisitonData, sceneData.fieldOfViewData);
-	rayCastScene.SetLimits(sceneData.extentData);
-	rayCastScene.m_densityFunc = sceneData.functionData;
-}
 
 void GraphicsScene::Raycast() 
 {
-	//Raycast scene
-	rayCastScene.Raycast();
-	const std::vector<unsigned char> rgbData = rayCastScene.GetRGBData();
-
-	const uchar* pixDataRGB = &rgbData[0];
-	// 400 pixels width, 300 pixels height, x bytes per line, RGB888 format
-	QImage img(pixDataRGB, 400, 300, 400 * 3, QImage::Format_RGB888); 															
-	QPixmap pix = QPixmap::fromImage(img); // Create pixmap from image
+	QImage resultsImage(m_imageWidth, m_imageHeight, QImage::Format_RGB888);
+	m_ray_caster(resultsImage, m_imageWidth, m_imageHeight, m_camera);
+	QPixmap pix = QPixmap::fromImage(resultsImage); // Create pixmap from image
 	m_graphicsPixmapItem->setPixmap(pix);
-}
-
-void GraphicsScene::RaycastFromCameraPos(const QVector3D &cameraPosition)
-{
-	rayCastScene.SetCameraPos(cameraPosition);
-	Raycast();
 }
 

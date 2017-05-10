@@ -6,9 +6,8 @@
 #include <QGraphicsPixmapItem>
 #include <QKeyEvent>
 
-#include "SceneData.h"
-#include "Scene.h"
 
+#include "Scene.h"
 
 class GraphicsScene : public QGraphicsScene
 {
@@ -22,12 +21,22 @@ public:
 	virtual	void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseReleaseEvent);
 	virtual void keyPressEvent(QKeyEvent *event);
 //	virtual	void keyPressEvent(QKeyEvent *event);
-
-	void SetScene(const SceneData &sceneData);
+	
 	void Raycast();
-	void RaycastFromCameraPos(const QVector3D &cameraPosition);
-	Scene rayCastScene;
+
+	template <typename RC>
+	void SetRayCaster(RC&& rc, const Camera& camera)
+	{
+		m_ray_caster = rc;
+		m_camera = camera;
+	}
+	std::function<void (QImage&, int, int, const Camera&)> m_ray_caster;
+
 	QPointF origPoint;
+	int m_imageWidth ;
+	int m_imageHeight ;
+	Camera m_camera;
+
 signals:
 
 	public slots :

@@ -1,0 +1,67 @@
+//#include "qtfirst.h"
+#include "MainWindow.h"
+
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QGraphicsScene>
+#include <QtWidgets/QGraphicsView>
+#include <QtWidgets/QGraphicsPixmapItem>
+
+
+#include "Scene.h"
+#include "SceneData.h"
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+#include <array>
+#include <tuple>
+
+/*
+-r,theta, phi-re a bemenete f-nek
+-gombfuggveynek megjelenitese, ha a suruseget atirom gombfuggvenyre
+*/
+
+
+int main(int argc, char *argv[])
+{
+	try
+	{
+		QApplication a(argc, argv);
+		
+		std::function<float(float, float, float)> densFunction = [](const float& x, const float& y, const float& z)
+		{
+			//return std::exp(-x*x - y*y - z*z);
+			return 1;
+		};
+
+		SceneData sceneData(QVector3D(0.0, 0.0, 250.0),								//	camera position
+							QVector3D(0.0, 0.0, 0.0),								//	viewed posisiton
+							120.0,													// field of view
+							{ { { -100.0, 100.0 },{ -100.0, 100.0 },{ 0.0, 100.0 } } },	// extent
+							densFunction);											// density function
+		
+		/*
+		SceneData sceneData(QVector3D(110.0, 110.0, 110.0),			//	camera position
+			QVector3D(0.0, 0.0, 0.0),								//	viewed posisiton
+			120.0,													// field of view
+			{ { { 0.0, 100.0 },{ 0.0, 100.0 },{ 0.0, 100.0 } } },	// extent
+			densFunction);											// density function
+		*/
+		
+		MainWindow w;
+		w.SetScene(sceneData);
+		w.Raycast();
+		w.show();
+		return a.exec();
+
+	}
+	catch (const std::exception& ex)
+	{
+		std::cerr << ex.what() << "\nFatal error\n" << std::endl;
+	}
+
+	std::cout << "Press any key to continue...\n";
+	getchar();
+	return 0;
+	
+}

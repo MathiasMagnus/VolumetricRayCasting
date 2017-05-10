@@ -1,0 +1,19 @@
+#ifndef QTFIRST_H
+#define QTFIRST_H
+
+#include <QtWidgets/QMainWindow>
+#include "ui_qtfirst.h"
+
+class MainWindow : public QMainWindow
+{
+	Q_OBJECT
+
+public:
+	MainWindow(QWidget *parent = 0);
+	~MainWindow();
+
+private:
+	Ui::QTFirstClass ui;
+};
+
+#endif // QTFIRST_H

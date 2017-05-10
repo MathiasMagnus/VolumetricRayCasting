@@ -1,0 +1,76 @@
+#include "qtfirst.h"
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QGraphicsScene>
+#include <QtWidgets/QGraphicsView>
+#include <QtWidgets/QGraphicsPixmapItem>
+
+#include "Scene.h"
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+#include <array>
+
+
+const std::vector<unsigned char>  Raycast()
+{
+	Scene scene;
+	// Init with camera position, viewed posisiton, field of view
+	scene.Init(QVector3D(-2.5, -0.0, -2.5), QVector3D(3, 3, -3), 120.0);
+
+	std::array<std::array<float, 2>, 3 > extent = { { { -3.0, 3.0 },{ -3.0, 3.0 },{ -3.0, 3.0 } } };
+	scene.SetLimits(extent);
+
+	scene.m_densityFunc = [](const float& x, const float& y, const float& z)
+	{
+		//return std::exp(-x*x - y*y - z*z);
+		return 1;
+	};
+
+	//Raycast scene
+	std::cout << "Raycasting scene...";
+	scene.Raycast();
+	std::cout << "done\n";
+
+	//Write output to bmp file
+	std::string outputFile = "volumeRender.bmp";
+	std::cout << "Writing image to file " << outputFile << "...";
+	return scene.GetRGBData();
+	std::cout << "done\n";
+
+	std::cout << "Volume render complete!\n";
+}
+
+int main(int argc, char *argv[])
+{
+	try
+	{
+		const std::vector<uchar> v = Raycast();
+
+		QApplication a(argc, argv);
+		QGraphicsScene scene;
+		QGraphicsView view(&scene);
+		//uchar pixDataRGB[] = { 255, 0, 0, 0, 0, 255, 0, 0, 255, 255, 0, 0 }; // Red, Blue, Red, Blue
+		//std::ifstream ifsData("C:/Users/balaz/Desktop/VR_Repowc/trunk/VolumeRenderer/rgb_uc.txt");
+		//std::string str(static_cast<std::stringstream const&>(std::stringstream() << ifsData.rdbuf()).str());
+		//std::vector<uchar> v(str.begin(), str.end());
+		const uchar* pixDataRGB = &v[0];
+		//QImage img(pixDataRGB, 2, 2, 6, QImage::Format_RGB888); // 2 pixels width, 2 pixels height, 6 bytes per line, RGB888 format
+		QImage img(pixDataRGB, 400, 300, 400 * 3, QImage::Format_RGB888); // 2 pixels width, 2 pixels height, 6 bytes per line, RGB888 format
+		QImage scaled = img.scaled(400, 300); // Scale image to show results better
+		QPixmap pix = QPixmap::fromImage(scaled); // Create pixmap from image
+		QGraphicsPixmapItem item(pix);
+		scene.addItem(&item);
+		view.show();
+		return a.exec();
+	}
+	catch (const std::exception& ex)
+	{
+		std::cerr << ex.what() << "\nFatal error\n" << std::endl;
+	}
+
+	std::cout << "Press any key to continue...\n";
+	getchar();
+	return 0;
+	
+}

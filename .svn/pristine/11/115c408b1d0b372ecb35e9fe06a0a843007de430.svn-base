@@ -1,0 +1,158 @@
+//#include "qtfirst.h"
+#include "MainWindow.h"
+
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QGraphicsScene>
+#include <QtWidgets/QGraphicsView>
+#include <QtWidgets/QGraphicsPixmapItem>
+
+
+#include "Scene.h"
+#include "SceneData.h"
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+#include <array>
+#include <tuple>
+#define PI 3.14159265
+
+/*
+-r,theta, phi-re a bemenete f-nek
+-gombfuggveynek megjelenitese, ha a suruseget atirom gombfuggvenyre
+*/
+
+
+/*
+#ToRead:
+1. http://www.glprogramming.com/red/chapter03.html
+
+*/
+
+/*
+#Q:
+1. Why is this configuration a bug?
+
+SceneData sceneData(QVector3D(0.0, 250.0, 0.0),								//	camera position
+QVector3D(0.0, 0.0, 0.0),								//	viewed posisiton
+120.0,													// field of view
+{ { { -100.0, 100.0 },{ -100.0, 100.0 },{ 0.0, 100.0 } } },	// extent
+densFunction);											// density function
+
+The up vector must not be parallel to the line of sight from eye to center.
+
+What up vector to set??? Shoul I always recalculate it when I move the camera? What should be the initial value?
+
+You can't determine it! You have to set it.
+Please, carefully read the following chapter, and take a look at fig.3-12.
+Up vector can be whatever you set. It should be perpendicular to Direction, but it is not required.
+
+
+#Q: March 21
+1. Mi legyen az ertelmezesi tartomanya theta es phinek?
+2. Mit csinaljak r-el?
+*/
+
+//std::ofstream out("C:/Users/balaz/Desktop/Y_lm.txt");
+/*
+#ToDo:
+suruseg eredmenyevel meghivom a szinezot, s csak akkor irom be az erteket, ha  nem szaturalodott
+*/
+
+/*
+mar 21
+suruseg fv. r,t, phibol csinal akarmit. S legyen meg egy függveny, ami az akarmibol csinal egy r,g,b,alfa erteket.
+-r,g,b-vel kapom meg a szint
+-alfa = szaturacio, ha mar alfa elerte az 1-et
+-az alfa folyamatosan akkumulalodik, ahogy adom ossze a szineket
+-a szin van hellye konvertalva
+->kov lepcso:
+-2 fvt kell beadni a sugarvetonek
+1 fv: fizika suruseg visszaad egy akarmit
+2.fv:veszi az akarmit, es visszaad egy r,g,b alfat (szinezo fuggven)
+-a sugarveto csak akkor irja be az r,b,b erteket ha az alfa meg nem szaturalodott. (array of 4)
+-induljon 0-rol az alfa
+
+*/
+int main(int argc, char *argv[])
+{
+	try
+	{
+		QApplication a(argc, argv);
+		
+		/*
+		std::function<float(float, float, float)> densFunction = [](const float& x, const float& y, const float& z)
+		{
+			//return std::exp(-x*x - y*y - z*z);
+			return 1;
+		};
+		*/
+		
+		std::function<float(float, float, float)> densFunction = [](const float& r, const float& theta, const float& phi)
+		{
+			// ide az r/checket
+			
+			auto val = abs(1.0 / 2.0 * sqrt(3 / PI) * cos(theta));
+			////out << val << "\t" << r << "\t" << theta * 180 / PI << "\t" << phi * 180 / PI << std::endl;
+			if (abs(2*val - r) < 0.01) // a hely vastagsaga
+				return 1;
+			else
+				return 0;
+
+
+
+			//return std::exp(-x*x - y*y - z*z);
+			/*
+			//Mate
+			auto val = abs((r / 100) * 1.0 / 2.0 * sqrt(3 / PI) * cos(theta));
+
+			return val > 0.5 ? 0 : val;
+			*/
+		};
+		
+
+		
+		// orig
+		SceneData sceneData(QVector3D(0.0, 0.0, 2.2),								//	camera position
+		QVector3D(0.0, 0.0, 0.0),								//	viewed posisiton
+		120.0,													// field of view
+		{ { { -1.0, 1.0 },{ -1.0, 1.0 },{ -1.0, 1.0 } } },	// extent
+		densFunction);											// density function
+
+		
+		
+		/*
+		// orig
+		SceneData sceneData(QVector3D(0.0, 0.0, 250.0),								//	camera position
+							QVector3D(0.0, 0.0, 0.0),								//	viewed posisiton
+							120.0,													// field of view
+							{ { { -100.0, 100.0 },{ -100.0, 100.0 },{ -100.0, 100.0 } } },	// extent
+							densFunction);											// density function
+
+		*/ 
+		
+		/*
+		SceneData sceneData(QVector3D(110.0, 110.0, 110.0),			//	camera position
+			QVector3D(0.0, 0.0, 0.0),								//	viewed posisiton
+			120.0,													// field of view
+			{ { { 0.0, 100.0 },{ 0.0, 100.0 },{ 0.0, 100.0 } } },	// extent
+			densFunction);											// density function
+		*/
+		
+		MainWindow w;
+		w.SetScene(sceneData);
+		w.Raycast();
+		w.show();
+		return a.exec();
+
+	}
+	catch (const std::exception& ex)
+	{
+		std::cerr << ex.what() << "\nFatal error\n" << std::endl;
+	}
+
+	std::cout << "Press any key to continue...\n";
+	getchar();
+	return 0;
+	
+}

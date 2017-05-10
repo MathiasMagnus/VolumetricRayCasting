@@ -8,15 +8,12 @@
 #include <sstream>
 #include <math.h>
 
-#ifndef EPSILON
-#define EPSILON 0.001
-#endif
-
 class Camera
 {
 public:
-	Camera();
-	Camera(QVector3D position, QVector3D viewDir, QVector3D viewUp, QVector3D viewSide);
+	Camera() {};
+	Camera(QVector3D position, QVector3D viewedPos, QVector3D viewUp, float fieldOfView);
+
 
 	bool Orthonormalize();
 
@@ -49,8 +46,6 @@ public:
 	QMatrix4x4 rotatorAroundXCClock;
 	QMatrix4x4 rotatorAroundYCClock;
 	QMatrix4x4 rotatorAroundZCClock;
-
-
 };
 
 #endif

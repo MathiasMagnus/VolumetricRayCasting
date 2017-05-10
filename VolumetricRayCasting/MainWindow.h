@@ -3,7 +3,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_VolumetricRayCasting.h"
-#include "SceneData.h"
+
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include "GraphicsScene.h"
@@ -15,14 +15,20 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(QWidget *parent = 0);
 	~MainWindow();
-	
-	void SetScene(const SceneData &sceneData);
+
+	template <typename RC>
+	void SetRayCaster(RC&& rc, const Camera& camera)
+	{
+		m_graphicsScene->SetRayCaster(rc, camera);
+	}
+
 	void Raycast();
+	void SetCameraPos(const QVector3D& cameraPos);
 
 private:
 	Ui::VolumetricRayCastingClass ui;
 	QGraphicsView * view;
-	GraphicsScene * scene;
+	GraphicsScene * m_graphicsScene;
 };
 
 #endif // VolumetricRayCasting_H

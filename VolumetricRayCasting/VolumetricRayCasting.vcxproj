@@ -170,8 +170,6 @@
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainWindow.cpp" />
-    <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -237,7 +235,6 @@
     </CustomBuild>
     <ClInclude Include="Light.h" />
     <ClInclude Include="Scene.h" />
-    <ClInclude Include="SceneData.h" />
     <ClInclude Include="Sphere.h" />
   </ItemGroup>
   <ItemGroup>

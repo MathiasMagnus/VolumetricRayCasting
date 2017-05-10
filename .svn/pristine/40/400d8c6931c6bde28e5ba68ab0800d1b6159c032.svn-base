@@ -9,7 +9,7 @@ using namespace std;
 
 Scene::Scene()
 {
-	m_backgroundColor = QVector4D(0.0f, 0.0f, 0.0f, 0.0f); 
+	m_backgroundColor = QVector3D(0.0f, 0.0f, 0.0f); 
 	m_light = Light(QVector3D(1.0f, 1.0f, 1.0f), QVector3D(0.0f, 4.0f, -1.0f));
 	m_maxAccumulatedDensity = 0.0; 
 }
@@ -46,7 +46,6 @@ void Scene::Init(const QVector3D& cameraPosition, const QVector3D& viewedPositio
 	m_camera.m_fieldOfView = fieldOfView; // in degrees
 }
 
-// #Q: should the m_viewUp also be transformed when I move t
 void Scene::CreateTransformMatrices()
 {
 	m_worldToViewMtx.setToIdentity();
@@ -124,19 +123,17 @@ void Scene::Raycast()
 	}
 }
 
-//std::ofstream out("C:/Users/balaz/Desktop/degree_atan2.txt");
+//std::ofstream out("C:/Users/balaz/Google Drive/diplomamunka/Solutions/VolumeRendererSource/VolumeRenderer/loc2_00-1.txt");
 //Raymarch from startT to endT, accumulating density
-QVector4D Scene::Raymarch(const QVector3D& rayDirection, float startT, float endT)
+QVector3D Scene::Raymarch(const QVector3D& rayDirection, float startT, float endT)
 {
-	QVector4D color4D(0.0f, 0.0f, 0.0f, 0.0f);
+	QVector3D color(0.0f, 0.0f, 0.0f);
 	QVector3D location(0.0f, 0.0f, 0.0f);
 
 	location = m_camera.GetPosition() + startT*rayDirection;
 
 	float current_t = startT;
-	// accumulated legyen 4es vektor, elso 3 szin, 4-ik alpha csatorna(telitettseg)
-	//float accumulatedDensity = 0.0;
-	QVector4D accumulatedDensity;
+	float accumulatedDensity = 0.0;
 
 	while(current_t < endT)
 	{
@@ -144,59 +141,15 @@ QVector4D Scene::Raymarch(const QVector3D& rayDirection, float startT, float end
 		current_t += m_deltaS;
 		if (!IsOutside(location)) 
 		{
-			// atvaltani xyz-t rthetaphire/
-			// Convert to spherical coordinated
-			
-			float r = sqrt(location.x()*location.x() + location.y()*location.y() + location.z()*location.z());
-			//if (r < 0.9 || r > 1.0)
-				//continue;
-			float theta = acos(location.z() / r) ; //* 180 / M_PI; // convert to degrees?
-			float phi = atan2(location.y(), location.x()) ; //* 180 / M_PI;
-	//		out << r << "\t" << theta << "\t" << phi << std::endl;
-			/*
-			-a density fv. visszad egy akarmit? (pl. ha komplex, akkor hogy?)
-			-a szinezo irom bele, hogyha pozitiv, akkor a piros erteket irom bele, ha negativ, akkor a masikba
-			-a m_densityFunc eredmenyet rogton beadni a myColoringFunctionbe
-			-a myColorinf funtion eredemenyet csak akkor irom be az accumualted density eredmenyebe,
-			ha az alfa csatorna nincs szaturalodva
-			*/
-			QVector4D color = ColoringFunction(m_densityFunc(r, theta, phi));
-			if (accumulatedDensity.w() < 1.0)
-				accumulatedDensity += color;
-
-			//accumulatedDensity += m_densityFunc(r, theta, phi);
-			//// colorFunction(accumulatedDensit4es),
-			//{
-			//	return 4esVektor; // csak akkor irom be az accumulated densitybe, ha nem szaturalodott az ertek
-			//}
-			
-			// end conversion
-			//accumulatedDensity += m_densityFunc(location.x(), location.y(), location.z());
+			accumulatedDensity += m_densityFunc(location.x(), location.y(), location.z());
 		}
 	}
 	
-	// this is now handled by the saturation parameter?
-	//if (accumulatedDensity > m_maxAccumulatedDensity) // needed for normalization
-	//	m_maxAccumulatedDensity = accumulatedDensity;
+	if (accumulatedDensity > m_maxAccumulatedDensity) // needed for normalization
+		m_maxAccumulatedDensity = accumulatedDensity;
 	
-	// az accumulated desnity egy r,g,b vektor legyen(4es vektor, 3 szin,4ik az alfa csatorna = telitettseg)
-	//color4D = m_backgroundColor + accumulatedDensity * m_light.GetColor();
-	color4D = m_backgroundColor + accumulatedDensity ;
-	return color4D;
-}
-
-QVector4D Scene::ColoringFunction(const int density)
-{
-	if (density > 0)
-	{ 
-		return QVector4D(0.0, 0.0, 1.0, 0.1); // blue
-	}
-	else if (density < 0)
-	{	
-		return QVector4D(1.0, 1.0, 0.0, 0.1); // yellow
-	}
-	else
-		return  QVector4D(0.0, 0.0, 0.0, 0.0); // black
+	color = m_backgroundColor + accumulatedDensity * m_light.GetColor();
+	return color;
 }
 
 bool Scene::IsOutside(const QVector3D& location) const
@@ -237,7 +190,7 @@ void Scene::WriteImageFile(std::string filename)
 		r = (unsigned char)(std::min(m_pixelColors[i].x() / m_maxAccumulatedDensity * 255., 255.));
 		g = (unsigned char)(std::min(m_pixelColors[i].y() / m_maxAccumulatedDensity * 255., 255.));
 		b = (unsigned char)(std::min(m_pixelColors[i].z() / m_maxAccumulatedDensity * 255., 255.));
-		
+
 		out << r << g << b;
 		//outOfs << m_pixelColors[i].x() << " " << m_pixelColors[i].y() << " " << m_pixelColors[i].z() << std::endl;
 	}
@@ -253,11 +206,9 @@ const std::vector<unsigned char> Scene::GetRGBData() const
 	unsigned char r, g, b;
 	for (unsigned int i = 0; i < m_pixelColors.size(); i++)
 	{
-		//if (m_pixelColors[i].w() > 0.0)
-		//	std::cout << "mia";
-		r = (unsigned char)(std::min(m_pixelColors[i].x()*20.0, 255.));
-		g = (unsigned char)(std::min(m_pixelColors[i].y()*20.0, 255.));
-		b = (unsigned char)(std::min(m_pixelColors[i].z()*20.0, 255.));
+		r = (unsigned char)(std::min(m_pixelColors[i].x() / m_maxAccumulatedDensity * 255., 255.));
+		g = (unsigned char)(std::min(m_pixelColors[i].y() / m_maxAccumulatedDensity * 255., 255.));
+		b = (unsigned char)(std::min(m_pixelColors[i].z() / m_maxAccumulatedDensity * 255., 255.));
 
 		rgbData.push_back(r);
 		rgbData.push_back(g);
@@ -276,12 +227,6 @@ QVector3D Scene::GetCameraViewDir() const
 {
 	return m_camera.GetViewDir();
 }
-
-QVector3D Scene::GetCameraViewedPos() const
-{
-	return m_camera.GetViewedPos();
-}
-
 void Scene::SetCameraPos(const QVector3D &cameraPos)
 {
 	m_camera.SetPosition(cameraPos);
