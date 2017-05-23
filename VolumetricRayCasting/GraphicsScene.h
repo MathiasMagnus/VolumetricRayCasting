@@ -7,7 +7,7 @@
 #include <QKeyEvent>
 
 
-#include "Scene.h"
+#include "Raycaster.h"
 
 class GraphicsScene : public QGraphicsScene
 {
@@ -30,7 +30,8 @@ public:
 		m_ray_caster = rc;
 		m_camera = camera;
 	}
-	std::function<void (QImage&, int, int, const Camera&)> m_ray_caster;
+
+	std::function< void (QImage&, int, int, const Camera&)> m_ray_caster;
 
 	QPointF origPoint;
 	int m_imageWidth ;

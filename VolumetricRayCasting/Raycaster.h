@@ -1,31 +1,20 @@
 #ifndef INCLUDED_SCENE_H
 #define INCLUDED_SCENE_H
 
-#include "Sphere.h"
-#include "Camera.h"
-#include "Light.h"
-#include <vector>
-#include <string>
-#include <iostream>
-#include <QMatrix4x4>
-#include <array>
 #include <functional>
-#include <QGenericMatrix>
-#include "Scene.h"
-#include  <algorithm>
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "Sphere.h"
+#include "Camera.h"
+
 template <typename DensFunc, typename ColorFunc>
-class Scene
+class Raycaster
 {
 public:
-	Scene(DensFunc densFunc, ColorFunc colorFunc) : m_densityFunc(densFunc), m_colorFunc(colorFunc)
+	Raycaster(DensFunc densFunc, ColorFunc colorFunc) : m_densityFunc(densFunc), m_colorFunc(colorFunc)
 	{
-		m_backgroundColor = QVector4D(0.0f, 0.0f, 0.0f, 0.0f);
-		m_light = Light(QVector3D(1.0f, 1.0f, 1.0f), QVector3D(0.0f, 4.0f, -1.0f));
-		m_maxAccumulatedDensity = 0.0;
+		m_saturationThreshold = 0;
 	}
 
 	void operator()(QImage& image, int imageWidth, int imageHeight, const  Camera& camera)
@@ -36,11 +25,12 @@ public:
 	//Initiate the volume rendering of the scene by raycasting/raymarching for each pixel
 	void Raycast(QImage& inImage, int imageWidth, int imageHeight, const Camera& camera)
 	{
-		m_pixelColors.clear();
-		m_pixelColors.reserve(imageWidth * imageHeight);
-		m_maxAccumulatedDensity = 0;
-		CreateTransformMatrices(camera);
+		//std::ofstream ofs("bitNr.txt");
+		auto bytePointer = inImage.bits();
+		int byteCount = 0;
 
+		CreateTransformMatrices(camera);
+	
 		float aspectRatio = (float)imageWidth / (float)imageHeight;
 		float x, y, z;
 
@@ -71,41 +61,43 @@ public:
 				transformedCamRayDir.normalize();
 				bool bIntersected = m_sphere.GetIntersections(camera.GetPosition(), transformedCamRayDir, t0, t1);
 
+				QColor pixelColor;
 				if (bIntersected && t0 > 0.0 && t1 > 0.0)
 				{
-					m_pixelColors.push_back(Raymarch(camera.GetPosition(), transformedCamRayDir, t0, t1));
+					pixelColor = Raymarch(camera.GetPosition(), transformedCamRayDir, t0, t1);
 				}
 				// if we are inside the spehere, we trace from the the ray's original position
 				else if (bIntersected && t1 > 0.0)
 				{
-					m_pixelColors.push_back(Raymarch(camera.GetPosition(), transformedCamRayDir, 0.0, t1));
+					pixelColor = Raymarch(camera.GetPosition(), transformedCamRayDir, 0.0, t1);
 				}
 				else
 				{
-					m_pixelColors.push_back(m_backgroundColor);
+					pixelColor = QColor(0, 0, 0);
 				}
+
+				// seting rgb value for every pixel
+				bytePointer[byteCount] = pixelColor.red();
+				byteCount++;
+				bytePointer[byteCount] = pixelColor.green();
+				byteCount++;
+				bytePointer[byteCount] = pixelColor.blue();
+				byteCount++;
+				//ofs << byteCount << std::endl;
 			}
 		}
-		// TD: this should be removed, and the pixel values should be written directly after every ray
-		auto rgbData = GetRGBData();
-		const uchar* pixDataRGB = &rgbData[0];
-		// 400 pixels width, 300 pixels height, x bytes per line, RGB888 format
-		QImage outImage(pixDataRGB, 400, 300, 400 * 3, QImage::Format_RGB888);
-		inImage = outImage; 
 	}
 
 	//std::ofstream out("C:/Users/balaz/Desktop/degree_atan2.txt");
 	//Raymarch from startT to endT, accumulating density
-	QVector4D Raymarch(const QVector3D& camPos, const QVector3D& rayDirection, float startT, float endT)
+	QColor Raymarch(const QVector3D& camPos, const QVector3D& rayDirection, float startT, float endT)
 	{
-		QVector4D color4D(0.0f, 0.0f, 0.0f, 0.0f);
+		QColor finalColor(0, 0, 0, 0);
 		QVector3D location(0.0f, 0.0f, 0.0f);
 
 		location = camPos + startT*rayDirection;
 
 		float current_t = startT;
-		// accumulated legyen 4es vektor, elso 3 szin, 4-ik alpha csatorna(telitettseg)
-		//float accumulatedDensity = 0.0;
 		QVector4D accumulatedDensity;
 
 		while (current_t < endT)
@@ -115,36 +107,30 @@ public:
 			if (!IsOutside(location))
 			{
 				// Convert to spherical coordinated
-
 				float r = sqrt(location.x()*location.x() + location.y()*location.y() + location.z()*location.z());
 				float theta = acos(location.z() / r); //* 180 / M_PI; // convert to degrees?
 				float phi = atan2(location.y(), location.x()); //* 180 / M_PI;
 														
-				 // TD: stop the ray, when color reaches the saturation.
-				QVector4D color = m_colorFunc(m_densityFunc(r, theta, phi));
+				QColor color = m_colorFunc(m_densityFunc(r, theta, phi));
 				
-				if (accumulatedDensity.w() < 1.0)
-					accumulatedDensity += color;
-
-				//accumulatedDensity += m_densityFunc(r, theta, phi);
-				//// colorFunction(accumulatedDensit4es),
-				//{
-				//	return 4esVektor; // csak akkor irom be az accumulated densitybe, ha nem szaturalodott az ertek
-				//}
-
-				// end conversion
-				//accumulatedDensity += m_densityFunc(location.x(), location.y(), location.z());
+				finalColor.setRed(finalColor.red() + color.red());
+				finalColor.setGreen(finalColor.green() + color.green());
+				finalColor.setBlue(finalColor.blue() + color.blue());
 			}
+
+			// stop the ray, when color reaches the saturation.
+			if (finalColor.red() > m_saturationThreshold || finalColor.green() > m_saturationThreshold 
+				|| finalColor.blue() > m_saturationThreshold)
+				break;
 		}
 
-		// this is now handled by the saturation parameter?
-		//if (accumulatedDensity > m_maxAccumulatedDensity) // needed for normalization
-		//	m_maxAccumulatedDensity = accumulatedDensity;
+		// normalizer according to the highest rgb value
+		auto normalizer = std::max(1, std::max(std::max(finalColor.red(), finalColor.green()), finalColor.blue()));
+		finalColor.setRed(finalColor.red() / normalizer * 255);
+		finalColor.setGreen(finalColor.green() / normalizer * 255);
+		finalColor.setBlue(finalColor.blue() / normalizer * 255);
 
-		// az accumulated desnity egy r,g,b vektor legyen(4es vektor, 3 szin,4ik az alfa csatorna = telitettseg)
-		//color4D = m_backgroundColor + accumulatedDensity * m_light.GetColor();
-		color4D = m_backgroundColor + accumulatedDensity;
-		return color4D;
+		return finalColor;
 	}
 
 	void SetLimits(const std::array<std::array<float, 2>, 3 > &extent)
@@ -216,55 +202,8 @@ public:
 			return false;
 	}
 
-	//Scene::WriteImageFile
-	//Write array of pixel colors to bmp file
-	//std::ofstream outOfs("C:/Users/balaz/Desktop/VR_2/VolumeRenderer/rgb1.8_.txt");
-	void WriteImageFile(std::string filename)
-	{
-		std::ostringstream out;
-		out.clear();
-		unsigned char r, g, b;
-		for (unsigned int i = 0; i < m_pixelColors.size(); i++)
-		{
-			r = (unsigned char)(std::min(m_pixelColors[i].x() / m_maxAccumulatedDensity * 255., 255.));
-			g = (unsigned char)(std::min(m_pixelColors[i].y() / m_maxAccumulatedDensity * 255., 255.));
-			b = (unsigned char)(std::min(m_pixelColors[i].z() / m_maxAccumulatedDensity * 255., 255.));
-
-			out << r << g << b;
-			//outOfs << m_pixelColors[i].x() << " " << m_pixelColors[i].y() << " " << m_pixelColors[i].z() << std::endl;
-		}
-		out.flush();
-
-		//SOIL_save_image(filename.c_str(), SOIL_SAVE_TYPE_BMP, imageWidth, imageHeight, 3, (const unsigned char *)out.str().c_str());	
-	}
-
-	const std::vector<unsigned char> GetRGBData() const
-	{
-		std::vector<unsigned char> rgbData;
-		rgbData.reserve(m_pixelColors.size());
-		unsigned char r, g, b;
-		for (unsigned int i = 0; i < m_pixelColors.size(); i++)
-		{
-			//if (m_pixelColors[i].w() > 0.0)
-			//	std::cout << "mia";
-			r = (unsigned char)(std::min(m_pixelColors[i].x()*20.0, 255.));
-			g = (unsigned char)(std::min(m_pixelColors[i].y()*20.0, 255.));
-			b = (unsigned char)(std::min(m_pixelColors[i].z()*20.0, 255.));
-
-			rgbData.push_back(r);
-			rgbData.push_back(g);
-			rgbData.push_back(b);
-		}
-
-		return rgbData;
-	}
-
-	float m_maxAccumulatedDensity; 
 	Sphere m_sphere;
 	float m_deltaS;
-	std::vector<QVector4D> m_pixelColors;
-	QVector4D m_backgroundColor;
-	Light m_light;
 	QMatrix4x4 m_worldToViewMtx;
 	QMatrix4x4 m_ViewToWorldMtx;
 	DensFunc m_densityFunc;
@@ -277,6 +216,8 @@ public:
 	float m_maxX;
 	float m_maxY;
 	float m_maxZ;
+
+	int m_saturationThreshold;
 };
 
 #endif

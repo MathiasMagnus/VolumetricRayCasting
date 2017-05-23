@@ -11,7 +11,7 @@ Camera::Camera(QVector3D position, QVector3D viewedPos, QVector3D viewUp, float 
 	m_fieldOfView = fieldOfView; // in degrees
 
 	// rotation matrix with 10 degree
-	float rotateWithDegree = 5;
+	float rotateWithDegree = 10;
 	//float rotateWithDegree = 90;
 	rotatorAroundXClock.rotate(-rotateWithDegree, 0.1, 0.0, 0.0);
 	rotatorAroundYClock.rotate(-rotateWithDegree, 0.0, 1.0, 0.0);

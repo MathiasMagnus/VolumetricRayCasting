@@ -3,9 +3,8 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_VolumetricRayCasting.h"
-
 #include <QGraphicsView>
-#include <QGraphicsScene>
+
 #include "GraphicsScene.h"
 
 class MainWindow : public QMainWindow

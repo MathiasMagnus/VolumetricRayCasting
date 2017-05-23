@@ -1,19 +1,11 @@
-#include "MainWindow.h"
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QGraphicsScene>
-#include <QtWidgets/QGraphicsView>
-#include <QtWidgets/QGraphicsPixmapItem>
-#include <QColor>
-#include "Scene.h"
 #include <fstream>
-#include <sstream>
 #include <iostream>
-#include <algorithm>
 #include <array>
-#include <tuple>
+
+#include "MainWindow.h"
 
 template <typename D, typename C>
-auto make_RayCaster(D&& d, C&& c) { return Scene<D, C>(std::forward<D>(d), std::forward<C>(c)); }
+auto make_RayCaster(D&& d, C&& c) { return Raycaster<D, C>(std::forward<D>(d), std::forward<C>(c)); }
 
 int main(int argc, char *argv[])
 {
@@ -34,17 +26,16 @@ int main(int argc, char *argv[])
 		// color according to the incoming density
 		auto colorFunction = [](const int density)
 		{
-			// TD: the init value of alpha, should depent on the number of voxels
 			if (density > 0)
 			{
-				return QVector4D(0.0, 0.0, 1.0, 0.1); // blue
+				return QColor(0, 0, 1); // blue
 			}
 			else if (density < 0)
 			{
-				return QVector4D(1.0, 1.0, 0.0, 0.1); // yellow
+				return QColor(1, 1, 0); // yellow
 			}
 			else
-				return  QVector4D(0.0, 0.0, 0.0, 0.0); // black
+				return  QColor(0, 0, 0); // black
 		};
 		QApplication a(argc, argv);
 		

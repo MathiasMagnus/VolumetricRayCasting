@@ -2,9 +2,6 @@
 #define INCLUDED_SPHERE_H
 
 #include <QVector3D>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 
 class Sphere
 {

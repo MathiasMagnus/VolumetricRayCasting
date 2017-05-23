@@ -3,10 +3,6 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <math.h>
 
 class Camera
 {
