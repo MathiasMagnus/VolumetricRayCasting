@@ -25,7 +25,7 @@ public:
 	void SetCameraPos(const QVector3D& cameraPos);
 
 private:
-	Ui::VolumetricRayCastingClass ui;
+	//Ui::VolumetricRayCastingClass ui;
 	QGraphicsView * view;
 	GraphicsScene * m_graphicsScene;
 };
