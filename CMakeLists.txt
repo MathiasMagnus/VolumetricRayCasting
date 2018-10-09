@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.8.2)
 
-project(vrwithcmake)
+project(vrwithcmake LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
+find_package(ComputeCpp)
+
+
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -42,7 +46,9 @@ qt5_wrap_ui(UI_HEADERS VolumetricRayCasting.ui)
 qt5_add_resources(QRCS VolumetricRayCasting.qrc)
 
 # Tell CMake to create the helloworld executable
-add_executable(vrwithcmake main.cpp MainWindow.cpp Camera.cpp GraphicsScene.cpp Sphere.cpp  ${UI_HEADERS} ${QRCS})
+add_executable(vrwithcmake main.cpp MainWindow.cpp Camera.cpp GraphicsScene.cpp Sphere.cpp ${UI_HEADERS} ${QRCS})
 
 # Add the Qt5 Widgets for linking
-target_link_libraries(vrwithcmake Qt5::Widgets Qt5::WinMain)
+target_link_libraries(vrwithcmake PUBLIC Qt5::Widgets Qt5::WinMain)
+
+add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp)
