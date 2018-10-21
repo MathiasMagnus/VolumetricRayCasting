@@ -11,7 +11,7 @@ Sphere::Sphere(QVector3D center, float radius, float density, QVector3D color)
 	m_radius2 = m_radius * m_radius;
 }
 
-bool Sphere::GetIntersections(const QVector3D &rayorig, const QVector3D &raydir, float &t0, float &t1)
+bool Sphere::GetIntersections(const QVector3D &rayorig, const QVector3D &raydir, float &t0, float &t1) const
 {
 	QVector3D l = m_center - rayorig;
 	float tca = QVector3D::dotProduct(l, raydir);

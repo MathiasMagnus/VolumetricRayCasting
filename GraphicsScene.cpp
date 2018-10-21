@@ -92,7 +92,7 @@ void GraphicsScene::keyPressEvent(QKeyEvent *event)
 
 void GraphicsScene::Raycast() 
 {
-	QImage resultsImage(m_imageWidth, m_imageHeight, QImage::Format_RGB888);
+	QImage resultsImage(m_imageWidth, m_imageHeight, QImage::Format_RGBA8888);
 	m_ray_caster(resultsImage, m_imageWidth, m_imageHeight, m_camera);
 	QPixmap pix = QPixmap::fromImage(resultsImage); // Create pixmap from image
 	m_graphicsPixmapItem->setPixmap(pix);

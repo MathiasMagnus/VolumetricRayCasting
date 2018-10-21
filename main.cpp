@@ -1,3 +1,6 @@
+// SYCL include
+#include <CL/sycl.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <array>
@@ -9,8 +12,37 @@ auto make_RayCaster(D&& d, C&& c) { return Raycaster<D, C>(std::forward<D>(d), s
 
 int main(int argc, char *argv[])
 {
+	// Sample params
+	const std::size_t plat_index = std::numeric_limits<std::size_t>::max();
+	const std::size_t dev_index = std::numeric_limits<std::size_t>::max();
+	const auto dev_type = cl::sycl::info::device_type::gpu;
+	const std::size_t length = 4096u;
+
 	try
 	{
+
+		// Platform selection
+		auto plats = cl::sycl::platform::get_platforms();
+
+		if (plats.empty()) throw std::runtime_error{ "No OpenCL platform found." };
+
+		std::cout << "Found platforms:" << std::endl;
+		for (const auto plat : plats) std::cout << "\t" << plat.get_info<cl::sycl::info::platform::vendor>() << std::endl;
+
+		auto plat = plats.at(plat_index == std::numeric_limits<std::size_t>::max() ? 0 : plat_index);
+
+		std::cout << "\n" << "Selected platform: " << plat.get_info<cl::sycl::info::platform::vendor>() << std::endl;
+
+		// Device selection
+		auto devs = plat.get_devices(dev_type);
+
+		if (devs.empty()) throw std::runtime_error{ "No OpenCL device of specified type found on selected platform." };
+
+		auto dev = devs.at(dev_index == std::numeric_limits<std::size_t>::max() ? 0 : dev_index);
+
+		std::cout << "Selected device: " << dev.get_info<cl::sycl::info::device::name>() << "\n" << std::endl;
+
+
 		// example lambda functions that could be given by the user
 		// density function(spherical harminics) inside the extent
 		auto densFunction = [](const float& r, const float& theta, const float& phi)

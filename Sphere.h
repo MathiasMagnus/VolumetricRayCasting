@@ -15,7 +15,7 @@ public:
 	float GetRadius() { return m_radius; }
 	float GetDensity() { return m_density; }
 	QVector3D GetColor() { return m_color; }
-	bool GetIntersections(const QVector3D &rayorig, const QVector3D &raydir, float &t0, float &t1);
+	bool GetIntersections(const QVector3D &rayorig, const QVector3D &raydir, float &t0, float &t1) const;
 
 private:
 	QVector3D m_center;
