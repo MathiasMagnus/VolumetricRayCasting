@@ -8,6 +8,7 @@
 #include "Sphere.h"
 #include "Camera.h"
 #include <CL/sycl.hpp>
+#include <iostream>
 #include <string>
 // GLM includes
 //#include <glm/glm.hpp>
@@ -16,7 +17,8 @@ template <typename DensFunc, typename ColorFunc>
 class Raycaster
 {
 public:
-	Raycaster(DensFunc densFunc, ColorFunc colorFunc) : m_densityFunc(densFunc), m_colorFunc(colorFunc)
+	Raycaster(DensFunc densFunc, ColorFunc colorFunc, size_t plat_id, cl::sycl::info::device_type device_type) : m_densityFunc(densFunc), m_colorFunc(colorFunc), 
+		m_plat_id(plat_id), m_device_type(device_type)
 	{
 		m_saturationThreshold = 0;
 	}
@@ -91,7 +93,7 @@ public:
 
 	void SimpleMatrixMult() {
 		const std::size_t length = 4096u;
-		cl::sycl::queue queue;
+		cl::sycl::queue queue = getQueue();
 		cl::sycl::buffer<float> buf{ cl::sycl::range<1>{length} };
 
 		/*{
@@ -125,8 +127,15 @@ public:
 				glm::vec4 v2 = mtx * v1;*/
 				auto v3 = glm::normalize(v1);
 				auto res = glm::dot(v1, v3);
+
 				v[i] = 0;
-				v[i] += res;
+
+				std::minstd_rand prng{ reinterpret_cast<const std::uint32_t&>(raydir.x) };
+				std::uniform_int<int> dist{ 0, 1 };
+				if (dist(prng))
+					v[i] += 1;
+				else
+					v[i] += 4;			
 			});
 		});
 
@@ -139,6 +148,34 @@ public:
 		ofs.close();
 
 	}
+
+	cl::sycl::queue getQueue() {
+
+		// Platform selection
+		auto plats = cl::sycl::platform::get_platforms();
+
+		if (plats.empty()) throw std::runtime_error{ "No OpenCL platform found." };
+
+		//std::cout << "Found platforms:" << std::endl;
+		//for (const auto plat : plats) std::cout << "\t" << plat.get_info<cl::sycl::info::platform::vendor>() << std::endl;
+
+		auto plat = plats.at(m_plat_id);
+
+		//std::cout << "\n" << "Selected platform: " << plat.get_info<cl::sycl::info::platform::vendor>() << std::endl;
+
+		// Device selection
+		auto devs = plat.get_devices(m_device_type);
+
+		if (devs.empty()) throw std::runtime_error{ "No OpenCL device of specified type found on selected platform." };
+
+		auto dev = devs.at(0);
+
+		//std::cout << "Selected device: ";// << dev.get_info<cl::sycl::info::device::name>() << "\n" << std::endl;
+
+		return cl::sycl::queue(dev);
+
+	}
+
 	void RaycastGPU(QImage& inImage, const size_t imageWidth, const size_t imageHeight, const Camera& camera)
 	{
 		try {
@@ -210,7 +247,7 @@ public:
 			float scaleFOV = tan(camera.m_fieldOfView / 2 * M_PI / 180);
 
 			// START GPU
-			cl::sycl::queue myQueue;
+			auto myQueue = getQueue();
 			constexpr auto ss = sizeof(cl::sycl::vec < unsigned char, 3 >);
 			cl::sycl::buffer < cl::sycl::uchar4, 2> resultBuff{ reinterpret_cast<cl::sycl::uchar4*>(inImage.bits()), cl::sycl::range<2> {imageHeight, imageWidth} };
 			//cl::sycl::buffer < cl::sycl::vec < unsigned char, 4 >, 2> resultBuff{ reinterpret_cast<cl::sycl::vec < unsigned char, 4 >*>(inImage.bits()), cl::sycl::range<2> {imageHeight, imageWidth} };
@@ -395,6 +432,9 @@ public:
 	glm::mat4 m_ViewToWorldMtx;
 	DensFunc m_densityFunc;
 	ColorFunc m_colorFunc;
+	size_t m_plat_id;
+	cl::sycl::info::device_type m_device_type;
+
 
 	/*float m_minX;
 	float m_minY;

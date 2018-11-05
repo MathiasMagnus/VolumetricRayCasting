@@ -21,7 +21,7 @@ public:
 		float tca = glm::dot(l, raydir);
 		float d2 = glm::dot(l, l) - tca * tca;
 
-		bool isIntersected = true;
+		bool isIntersected = false;
 		//if (d2 > m_radius2)
 		if ((m_radius2 - d2) < 1.0f)
 			isIntersected = false;

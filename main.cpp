@@ -4,12 +4,13 @@
 #include <fstream>
 #include <iostream>
 #include <array>
+#include <QCommandLineParser>
 
 #include "MainWindow.h"
 
 
 template <typename D, typename C>
-auto make_RayCaster(D&& d, C&& c) { return Raycaster<D, C>(std::forward<D>(d), std::forward<C>(c)); }
+auto make_RayCaster(D&& d, C&& c, size_t plat_id, cl::sycl::info::device_type device_type) { return Raycaster<D, C>(std::forward<D>(d), std::forward<C>(c), plat_id, device_type); }
 
 int main(int argc, char *argv[])
 {
@@ -21,29 +22,6 @@ int main(int argc, char *argv[])
 
 	try
 	{
-
-		// Platform selection
-		auto plats = cl::sycl::platform::get_platforms();
-
-		if (plats.empty()) throw std::runtime_error{ "No OpenCL platform found." };
-
-		std::cout << "Found platforms:" << std::endl;
-		for (const auto plat : plats) std::cout << "\t" << plat.get_info<cl::sycl::info::platform::vendor>() << std::endl;
-
-		auto plat = plats.at(plat_index == std::numeric_limits<std::size_t>::max() ? 0 : plat_index);
-
-		std::cout << "\n" << "Selected platform: " << plat.get_info<cl::sycl::info::platform::vendor>() << std::endl;
-
-		// Device selection
-		auto devs = plat.get_devices(dev_type);
-
-		if (devs.empty()) throw std::runtime_error{ "No OpenCL device of specified type found on selected platform." };
-
-		auto dev = devs.at(dev_index == std::numeric_limits<std::size_t>::max() ? 0 : dev_index);
-
-		std::cout << "Selected device: " << dev.get_info<cl::sycl::info::device::name>() << "\n" << std::endl;
-
-
 		// example lambda functions that could be given by the user
 		// density function(spherical harminics) inside the extent
 		auto densFunction = [](const float& r, const float& theta, const float& phi)
@@ -71,11 +49,51 @@ int main(int argc, char *argv[])
 				return  cl::sycl::uchar4(0, 0, 0, 0); // black
 		};
 		QApplication a(argc, argv);
+
+		QCommandLineParser parser;
+		parser.setApplicationDescription("Sample application demonstrating OpenCL-OpenGL interop");
+		parser.addHelpOption();
+		parser.addVersionOption();
+		parser.addOptions({
+			{ { "d", "device" }, "Device type to use", "[cpu|gpu|acc]", "cpu" },
+			{ { "p", "platformId" }, "The index of the platform to use", "unsigned integral", "0" },
+			{ { "x", "particles" }, "Number of particles", "unsigned integral", "8192" }
+			});
+
+		parser.process(a);
+
+		cl::sycl::info::device_type dev_type;
+		std::size_t plat_id, count;
+		if (!parser.value("device").isEmpty())
+		{
+			if (parser.value("device") == "cpu")
+				dev_type = cl::sycl::info::device_type::cpu;
+			else if (parser.value("device") == "gpu")
+				dev_type = cl::sycl::info::device_type::gpu;
+			else if (parser.value("device") == "host")
+				dev_type = cl::sycl::info::device_type::host;
+			else if (parser.value("device") == "acc")
+				dev_type = cl::sycl::info::device_type::accelerator;
+			else
+			{
+				qFatal("NBody: Invalid device type: valid values are [cpu|gpu|acc]. Using CL_DEVICE_TYPE_DEFAULT instead.");
+			}
+		}
+		else dev_type = cl::sycl::info::device_type::automatic;
+		if (!parser.value("platformId").isEmpty())
+		{
+			plat_id = parser.value("platformId").toULong();
+		}
+		else plat_id = 0;
+		if (!parser.value("particles").isEmpty())
+		{
+			count = parser.value("particles").toULong();
+		}
 		
 		// extent definition
 		std::array<std::array<float, 2>, 3 > extent = { { { -1.0, 1.0 },{ -1.0, 1.0 },{ -1.0, 1.0 } } };
 
-		auto rayCaster = make_RayCaster(densFunction, colorFunction);
+		auto rayCaster = make_RayCaster(densFunction, colorFunction, plat_id, dev_type);
 		rayCaster.SetLimits(extent);
 
 		MainWindow w;
