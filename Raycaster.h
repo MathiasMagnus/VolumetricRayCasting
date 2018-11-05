@@ -2,9 +2,10 @@
 #define INCLUDED_SCENE_H
 
 #include <functional>
-#define _USE_MATH_DEFINES
-#include <math.h>
-
+//#define _USE_MATH_DEFINES
+//#include <math.h>
+# define M_PI           3.14159265358979323846  /* pi */
+#include <cmath>
 #include "Sphere.h"
 #include "Camera.h"
 #include <CL/sycl.hpp>
@@ -13,6 +14,7 @@
 // GLM includes
 //#include <glm/glm.hpp>
 #include "glm/ext.hpp"
+#include "random"
 template <typename DensFunc, typename ColorFunc>
 class Raycaster
 {
@@ -130,7 +132,7 @@ public:
 
 				v[i] = 0;
 
-				std::minstd_rand prng{ reinterpret_cast<const std::uint32_t&>(raydir.x) };
+				std::minstd_rand prng{ (unsigned int)i.get_linear_id()};
 				std::uniform_int<int> dist{ 0, 1 };
 				if (dist(prng))
 					v[i] += 1;
@@ -255,8 +257,10 @@ public:
 				auto imageData = resultBuff.get_access <cl::sycl::access::mode::write>(cgh);
 				cgh.parallel_for<class raycast>(cl::sycl::range<2> {imageHeight, imageWidth}, [=,
 					ViewToWorldMtx = m_ViewToWorldMtx,
-					sphere = m_sphere, cam = camera, raymarch = m_raymarch, deltaS = m_deltaS, extent = m_extent, densityFunc = m_densityFunc, colorFunc = m_colorFunc,
-					saturationThreshold = m_saturationThreshold](cl::sycl::id<2> index) {
+					cam = camera, raymarch = m_raymarch, deltaS = m_deltaS, extent = m_extent, densityFunc = m_densityFunc, colorFunc = m_colorFunc,
+					saturationThreshold = m_saturationThreshold,
+					sphereCenter = m_sphere.m_center, sphereRadius2 = m_sphere.m_radius2
+				](cl::sycl::id<2> index) {
 
 					glm::vec4 rayVec((2 * (index[1] + 0.5) / (float)imageWidth - 1) * aspectRatio * scaleFOV,
 						(1 - 2 * (index[0] + 0.5) / (float)imageHeight) * scaleFOV,
@@ -268,9 +272,51 @@ public:
 					glm::vec3 transformedCamRayDir = glm::vec3(ViewToWorldMtx * rayVec) - cam.GetPosition();
 
 					transformedCamRayDir = glm::normalize(transformedCamRayDir);
-					bool bIntersected = sphere.GetIntersections(cam.GetPosition(), transformedCamRayDir, t0, t1);
+					//bool bIntersected = sphere.GetIntersections(cam.GetPosition(), transformedCamRayDir, t0, t1);
 
-					//QColor pixelColor;
+					auto getIntersections_lambda = [&t0, &t1, index](const cl::sycl::float3 rayorig, const cl::sycl::float3 raydir, const cl::sycl::float3 sphereCenter, const float sphereRadius2) {
+						cl::sycl::float3 l = sphereCenter - rayorig;
+						float tca = cl::sycl::dot(l, raydir);
+						float d2 = cl::sycl::dot(l, l) - tca * tca;
+
+						bool isIntersected = true;
+						//if ((int)sphereRadius2  ==  (int)d2)
+						if ((sphereRadius2 - d2) < 0.0001f)
+						//if (index.get(1) % 2 == 0)
+							isIntersected = false;
+
+						float thc =
+#ifdef __SYCL_DEVICE_ONLY__
+							cl::sycl::sqrt(sphereRadius2 - d2);
+#else
+							0.f;
+#endif
+						t0 = tca - thc;
+						t1 = tca + thc;
+
+						return isIntersected;
+
+						/*std::minstd_rand prng{ (unsigned int)index.get(1) };
+						std::uniform_int<int> dist{ 0, 100 };
+						bool bIntersected = false;
+						if (dist(prng) % 5 == 0)
+							bIntersected = true;
+						else
+							bIntersected = false;
+
+						return bIntersected;*/
+					};
+
+					const auto cp = cam.GetPosition();
+					const auto& tcrd = transformedCamRayDir;
+					const auto& sc = sphereCenter;
+
+					auto bIntersected = getIntersections_lambda(
+						cl::sycl::float3(cp.x, cp.y, cp.z),
+						cl::sycl::float3(tcrd.x, tcrd.y, tcrd.z),
+						cl::sycl::float3(sc.x, sc.y, sc.z),
+						sphereRadius2);
+
 					cl::sycl::uchar4 pixelColor;
 					if (bIntersected)
 					//if (bIntersected && t0 > 0.0 && t1 > 0.0)
@@ -287,7 +333,7 @@ public:
 					}
 					else
 					{
-						pixelColor = cl::sycl::uchar4(0, 255, 255, 255);
+						pixelColor = cl::sycl::uchar4(0, 0, 255, 255);
 					}
 
 					// seting rgb value for every pixel
@@ -313,9 +359,9 @@ public:
 			ofs2 << "e.get_line_number(): " << e.get_line_number() << std::endl;
 			ofs2.close();
 			inImage.save("after1.png");
-			/*std::cerr << e.what() << std::endl;
-			std::cin.get();
-			std::exit(e.get_cl_code());*/
+			std::cerr << e.what() << std::endl;
+			//std::cin.get();
+			std::exit(e.get_cl_code());
 		}
 		catch (std::exception e)
 		{
@@ -323,9 +369,9 @@ public:
 			ofs2 << "aaaaa";
 			ofs2.close();
 			inImage.save("after2.png");
-			/*std::cerr << e.what() << std::endl;
-			std::cin.get();
-			std::exit(EXIT_FAILURE);*/
+			std::cerr << e.what() << std::endl;
+			//std::cin.get();
+			std::exit(EXIT_FAILURE);
 		}
 	}
 

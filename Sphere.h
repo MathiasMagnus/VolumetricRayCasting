@@ -2,7 +2,6 @@
 #define INCLUDED_SPHERE_H
 
 #include <glm/glm.hpp>
-#include <math.h>       /* sqrt */
 
 class Sphere
 {
@@ -21,21 +20,19 @@ public:
 		float tca = glm::dot(l, raydir);
 		float d2 = glm::dot(l, l) - tca * tca;
 
-		bool isIntersected = false;
-		//if (d2 > m_radius2)
-		if ((m_radius2 - d2) < 1.0f)
+		bool isIntersected = true;
+		if ((m_radius2 - d2) < 0.0001f)
 			isIntersected = false;
-			//return false;
 
-		float thc = sqrt(3.2f - 3.0f);
-		//float thc = sqrt(m_radius2 - d2);
-		/*t0 = tca - thc;
-		t1 = tca + thc;*/
+		float thc = sqrt(m_radius2 - d2);
+		t0 = tca - thc;
+		t1 = tca + thc;
 
 		return isIntersected;
+
+		return true;
 	}
 
-private:
 	glm::vec3 m_center;
 	float m_radius;
 	float m_radius2;
