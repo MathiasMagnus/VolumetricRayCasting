@@ -1,23 +1,23 @@
 #ifndef INCLUDED_CAMERA_H
 #define INCLUDED_CAMERA_H
 
-#include <QMatrix4x4>
-#include <QVector3D>
+#include <glm/glm.hpp>
 
 class Camera
 {
 public:
 	Camera() {};
-	Camera(QVector3D position, QVector3D viewedPos, QVector3D viewUp, float fieldOfView);
+	
+	Camera(glm::vec3 position, glm::vec3 viewedPos, glm::vec3 viewUp, float fieldOfView);
 
 
 	bool Orthonormalize();
 
-	QVector3D GetPosition() const { return m_position; }
-	QVector3D GetViewDir() const  { return m_viewDir; }
-	QVector3D GetViewUp() const  { return m_viewUp; }
-	QVector3D GetViewSide() const { return m_viewSide; }
-	QVector3D GetViewedPos() const { return m_viewedPosition; }
+	glm::vec3 GetPosition() const { return m_position; }
+	glm::vec3 GetViewDir() const  { return m_viewDir; }
+	glm::vec3 GetViewUp() const  { return m_viewUp; }
+	glm::vec3 GetViewSide() const { return m_viewSide; }
+	glm::vec3 GetViewedPos() const { return m_viewedPosition; }
 	void RotateAroundXClock();
 	void RotateAroundYClock();
 	void RotateAroundZClock();
@@ -26,22 +26,22 @@ public:
 	void RotateAroundYCClock();
 	void RotateAroundZCClock();
 
-	void SetPosition(const QVector3D &cameraPos);
+	void SetPosition(const glm::vec3 &cameraPos);
 
-	QVector3D m_position;
-	QVector3D m_viewDir;
-	QVector3D m_viewUp;
-	QVector3D m_viewSide;
-	QVector3D m_viewedPosition;
+	glm::vec3 m_position;
+	glm::vec3 m_viewDir;
+	glm::vec3 m_viewUp;
+	glm::vec3 m_viewSide;
+	glm::vec3 m_viewedPosition;
 	float	m_fieldOfView;
 
-	QMatrix4x4 rotatorAroundXClock;
-	QMatrix4x4 rotatorAroundYClock;
-	QMatrix4x4 rotatorAroundZClock;
+	glm::mat3 rotatorAroundXClock;
+	glm::mat3 rotatorAroundYClock;
+	glm::mat3 rotatorAroundZClock;
 
-	QMatrix4x4 rotatorAroundXCClock;
-	QMatrix4x4 rotatorAroundYCClock;
-	QMatrix4x4 rotatorAroundZCClock;
+	glm::mat3 rotatorAroundXCClock;
+	glm::mat3 rotatorAroundYCClock;
+	glm::mat3 rotatorAroundZCClock;
 };
 
 #endif

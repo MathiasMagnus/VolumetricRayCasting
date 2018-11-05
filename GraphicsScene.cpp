@@ -19,22 +19,21 @@ GraphicsScene::~GraphicsScene()
 void GraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent)
 {
 	int delta = wheelEvent->delta() / 120; 
-	QVector3D newCameraPos = m_camera.GetPosition();
-	newCameraPos.setZ(newCameraPos.z() + newCameraPos.z() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().z())));
+	glm::vec3 newCameraPos = m_camera.GetPosition();
+	/*newCameraPos.setZ(newCameraPos.z() + newCameraPos.z() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().z())));
 	newCameraPos.setY(newCameraPos.y() + newCameraPos.y() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().y())));
-	newCameraPos.setX(newCameraPos.x() + newCameraPos.x() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().x())));
+	newCameraPos.setX(newCameraPos.x() + newCameraPos.x() / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().x())));*/
 	
+	newCameraPos = glm::vec3(newCameraPos.x + newCameraPos.x / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().x)),
+		newCameraPos.y + newCameraPos.y / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().y)),
+		newCameraPos.z + newCameraPos.z / (10.0 * delta * copysignf(1.0, m_camera.GetViewDir().z)));
 	m_camera.SetPosition(newCameraPos);
 	Raycast();
-
-	//QGraphicsScene::wheelEvent(wheelEvent); // ?
 }
 
 void GraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mousePressEvent)
 {
 	origPoint = mousePressEvent->scenePos();
-	
-	//QGraphicsScene::mousePressEvent(mousePressEvent); 
 }
 
 void GraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseMoveEvent)
@@ -66,9 +65,6 @@ void GraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseMoveEvent)
 		origPoint = movingPoint;
 		Raycast();	
 	}
-
-	//GraphicsScene::mouseMoveEvent(mouseMoveEvent); // why does it crash if I call this at the end?
-	
 }
 void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseReleaseEvent)
 {

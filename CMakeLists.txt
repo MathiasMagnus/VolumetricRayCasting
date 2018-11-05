@@ -38,6 +38,7 @@ endif()
 find_package(Qt5Core REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 find_package(Qt5Widgets REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 # Generate code from ui files
 qt5_wrap_ui(UI_HEADERS VolumetricRayCasting.ui)
@@ -50,5 +51,6 @@ add_executable(vrwithcmake main.cpp MainWindow.cpp Camera.cpp GraphicsScene.cpp 
 
 # Add the Qt5 Widgets for linking
 target_link_libraries(vrwithcmake PUBLIC Qt5::Widgets Qt5::WinMain)
+target_link_libraries(vrwithcmake PRIVATE glm)
 
-add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp)
+add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp Sphere.h Sphere.cpp)

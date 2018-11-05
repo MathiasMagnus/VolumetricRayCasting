@@ -8,7 +8,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=C:\\Diplomamunka\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake --no-warn-unused-cli",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "variables": [
@@ -21,11 +21,11 @@
     {
       "name": "x64-Release",
       "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
+      "configurationType": "Release",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=C:\\Diplomamunka\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake --no-warn-unused-cli",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "variables": [

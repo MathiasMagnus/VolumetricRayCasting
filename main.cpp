@@ -1,11 +1,12 @@
 // SYCL include
 #include <CL/sycl.hpp>
-
+#include <glm/glm.hpp>
 #include <fstream>
 #include <iostream>
 #include <array>
 
 #include "MainWindow.h"
+
 
 template <typename D, typename C>
 auto make_RayCaster(D&& d, C&& c) { return Raycaster<D, C>(std::forward<D>(d), std::forward<C>(c)); }
@@ -60,14 +61,14 @@ int main(int argc, char *argv[])
 		{
 			if (density > 0)
 			{
-				return QColor(0, 0, 1); // blue
+				return cl::sycl::uchar4(0, 0, 1, 0); // blue
 			}
 			else if (density < 0)
 			{
-				return QColor(1, 1, 0); // yellow
+				return cl::sycl::uchar4(1, 1, 0, 0); // yellow
 			}
 			else
-				return  QColor(0, 0, 0); // black
+				return  cl::sycl::uchar4(0, 0, 0, 0); // black
 		};
 		QApplication a(argc, argv);
 		
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 
 		MainWindow w;
 		// camera position, viewed posisiton, view up, field of view
-		Camera camera(QVector3D(0.0, 0.0, 2.2), QVector3D(0.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0), 120.0);
+		Camera camera(glm::vec3(0.0, 0.0, 2.2), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), 120.0);
 		w.SetRayCaster(rayCaster, camera);
 		w.Raycast();
 		w.show();
