@@ -186,8 +186,6 @@ public:
 				DensFunc densityFunc, ColorFunc colorFunc)
 			{
 				cl::sycl::uchar4 finalColor(0, 0, 0, 0);
-				//return finalColor;
-				//QColor finalColor(0, 0, 0, 0);
 				glm::vec3 location(0.0f, 0.0f, 0.0f);
 
 				location = camPos + startT * rayDirection;
@@ -257,21 +255,21 @@ public:
 				auto imageData = resultBuff.get_access <cl::sycl::access::mode::write>(cgh);
 				cgh.parallel_for<class raycast>(cl::sycl::range<2> {imageHeight, imageWidth}, [=,
 					ViewToWorldMtx = m_ViewToWorldMtx,
-					cam = camera, raymarch = m_raymarch, deltaS = m_deltaS, extent = m_extent, densityFunc = m_densityFunc, colorFunc = m_colorFunc,
+					camPos = camera.GetPosition(), raymarch = m_raymarch, deltaS = m_deltaS, extent = m_extent, densityFunc = m_densityFunc, colorFunc = m_colorFunc,
 					saturationThreshold = m_saturationThreshold,
 					sphereCenter = m_sphere.m_center, sphereRadius2 = m_sphere.m_radius2
 				](cl::sycl::id<2> index) {
 
-					glm::vec4 rayVec((2 * (index[1] + 0.5) / (float)imageWidth - 1) * aspectRatio * scaleFOV,
-						(1 - 2 * (index[0] + 0.5) / (float)imageHeight) * scaleFOV,
+					glm::vec4 rayVec((2 * (index[1] + 0.5f) / (float)imageWidth - 1) * aspectRatio * scaleFOV,
+						(1 - 2 * (index[0] + 0.5f) / (float)imageHeight) * scaleFOV,
 						-1.0f, 1.0f); // ADDED 4th element 1.0f to support 4x4 matrix multiplication
 
 					float t0 = -1E+36;
 					float t1 = -1E+36;
 					
-					glm::vec3 transformedCamRayDir = glm::vec3(ViewToWorldMtx * rayVec) - cam.GetPosition();
+					//glm::vec3 transformedCamRayDir = glm::vec3(ViewToWorldMtx * rayVec) - camPos;
 
-					transformedCamRayDir = glm::normalize(transformedCamRayDir);
+					//transformedCamRayDir = glm::normalize(transformedCamRayDir);
 					//bool bIntersected = sphere.GetIntersections(cam.GetPosition(), transformedCamRayDir, t0, t1);
 
 					auto getIntersections_lambda = [&t0, &t1, index](const cl::sycl::float3 rayorig, const cl::sycl::float3 raydir, const cl::sycl::float3 sphereCenter, const float sphereRadius2) {
@@ -281,8 +279,8 @@ public:
 
 						bool isIntersected = true;
 						//if ((int)sphereRadius2  ==  (int)d2)
-						if ((sphereRadius2 - d2) < 0.0001f)
-						//if (index.get(1) % 2 == 0)
+						//if ((sphereRadius2 - d2) < 0.0001f)
+						if (index.get(1) % 2 == 0)
 							isIntersected = false;
 
 						float thc =
@@ -296,45 +294,81 @@ public:
 
 						return isIntersected;
 
-						/*std::minstd_rand prng{ (unsigned int)index.get(1) };
-						std::uniform_int<int> dist{ 0, 100 };
-						bool bIntersected = false;
-						if (dist(prng) % 5 == 0)
-							bIntersected = true;
-						else
-							bIntersected = false;
-
-						return bIntersected;*/
 					};
 
-					const auto cp = cam.GetPosition();
-					const auto& tcrd = transformedCamRayDir;
-					const auto& sc = sphereCenter;
-
-					auto bIntersected = getIntersections_lambda(
+					/*auto bIntersected = getIntersections_lambda(
 						cl::sycl::float3(cp.x, cp.y, cp.z),
 						cl::sycl::float3(tcrd.x, tcrd.y, tcrd.z),
 						cl::sycl::float3(sc.x, sc.y, sc.z),
-						sphereRadius2);
+						sphereRadius2);*/
+
+					/*glm::vec3 l = sphereCenter - camPos;
+					float tca = glm::dot(l, transformedCamRayDir);
+					float d2 = glm::dot(l, l) - tca * tca;*/
 
 					cl::sycl::uchar4 pixelColor;
-					if (bIntersected)
-					//if (bIntersected && t0 > 0.0 && t1 > 0.0)
-					{
+					//auto camPosfloat3 = cl::sycl::float3{ rayVec.x, rayVec.y, rayVec.z };
+					//if (index.get(1) % 2 == 0) {
+					//if ((int(glm::length(camPos))) % 2 == 0) {
+					auto length = (int)glm::dot(rayVec, rayVec);
+					//auto length = (int)glm::dot(transformedCamRayDir, transformedCamRayDir) + 1;
+					//auto length = (int)glm::dot(transformedCamRayDir, transformedCamRayDir) + 1;
+					if (length % 2 == 0) {
+					//if (index.get(1) % 2 == 0) {
+					//if ((int(glm::length(camPos))) % 2 == 0) {
+					//if ((int(cl::sycl::length(camPosfloat3))) % 2 == 0) {
+
 						pixelColor = cl::sycl::uchar4(255, 0, 0, 255);
-						/*pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, t0, t1, deltaS, extent, saturationThreshold,
-							const_cast<DensFunc>densityFunc, const_cast<ColorFunc>(colorFunc));*/
 					}
-					// if we are inside the spehere, we trace from the the ray's original position
-					else if (bIntersected && t1 > 0.0)
-					{
-						//pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, 0.0, t1, deltaS, extent, saturationThreshold, const_cast<DensFunc>(densityFunc), const_cast<ColorFunc>(colorFunc));
+					else if (index.get(1) % 3 == 0) {
 						pixelColor = cl::sycl::uchar4(0, 255, 0, 255);
 					}
-					else
-					{
+					else if (index.get(1) % 5 == 0) {
 						pixelColor = cl::sycl::uchar4(0, 0, 255, 255);
 					}
+					else if (index.get(1) % 7 == 0) {
+						pixelColor = cl::sycl::uchar4(234, 55, 54, 255);
+					}
+					else if (index.get(1) % 11 == 0) {
+						pixelColor = cl::sycl::uchar4(0, 255, 234, 255);
+					}
+					else {
+						pixelColor = cl::sycl::uchar4(0, 0, 0, 255);
+
+					}
+					//bool bIntersected = true;
+					////if ((int(glm::length(camPos))) % 2 == 0)
+					////if ((sphereRadius2 - d2) < 0.0001f)
+					//if (index.get(1) % 2 == 0)
+					//	bIntersected = false;
+
+//					float thc =
+//#ifdef __SYCL_DEVICE_ONLY__
+//						cl::sycl::sqrt(sphereRadius2 - d2);
+//#else
+//						0.f;
+//#endif
+//					t0 = tca - thc;
+//					t1 = tca + thc;
+//
+//					cl::sycl::uchar4 pixelColor;
+//					if (bIntersected)
+//					//if (bIntersected && t0 > 0.0 && t1 > 0.0)
+//					{
+//						pixelColor = cl::sycl::uchar4(255, 0, 0, 255);
+//						/*pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, t0, t1, deltaS, extent, saturationThreshold,
+//							const_cast<DensFunc>densityFunc, const_cast<ColorFunc>(colorFunc));*/
+//					}
+//					// if we are inside the spehere, we trace from the the ray's original position
+//					else if (bIntersected && t1 > 0.0)
+//					{
+//						//pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, 0.0, t1, deltaS, extent, saturationThreshold, const_cast<DensFunc>(densityFunc), const_cast<ColorFunc>(colorFunc));
+//						pixelColor = cl::sycl::uchar4(0, 255, 0, 255);
+//					}
+//					else
+//					{
+//						pixelColor = cl::sycl::uchar4(0, 0, 255, 255);
+//					}
 
 					// seting rgb value for every pixel
 					imageData[index] = pixelColor;	
