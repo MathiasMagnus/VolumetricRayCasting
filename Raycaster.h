@@ -267,22 +267,26 @@ public:
 					float t0 = -1E+36;
 					float t1 = -1E+36;
 					
-					//glm::vec3 transformedCamRayDir = glm::vec3(ViewToWorldMtx * rayVec) - camPos;
+					glm::vec3 transformedCamRayDir = glm::vec3(ViewToWorldMtx * rayVec) - camPos;
+
 
 					//transformedCamRayDir = glm::normalize(transformedCamRayDir);
+					cl::sycl::float3 transformedCamRayDir_sycl{ transformedCamRayDir.x, transformedCamRayDir.y, transformedCamRayDir.z };
+					transformedCamRayDir_sycl = cl::sycl::normalize(transformedCamRayDir_sycl);
+
 					//bool bIntersected = sphere.GetIntersections(cam.GetPosition(), transformedCamRayDir, t0, t1);
 
-					auto getIntersections_lambda = [&t0, &t1, index](const cl::sycl::float3 rayorig, const cl::sycl::float3 raydir, const cl::sycl::float3 sphereCenter, const float sphereRadius2) {
+					auto getIntersections_lambda = [&t0, &t1](const cl::sycl::float3 rayorig, const cl::sycl::float3 raydir, const cl::sycl::float3 sphereCenter, 
+						const float sphereRadius2) {
 						cl::sycl::float3 l = sphereCenter - rayorig;
 						float tca = cl::sycl::dot(l, raydir);
 						float d2 = cl::sycl::dot(l, l) - tca * tca;
 
 						bool isIntersected = true;
-						//if ((int)sphereRadius2  ==  (int)d2)
-						//if ((sphereRadius2 - d2) < 0.0001f)
-						if (index.get(1) % 2 == 0)
+						if ((sphereRadius2 - d2) < 0.0001f) {
 							isIntersected = false;
 
+						}
 						float thc =
 #ifdef __SYCL_DEVICE_ONLY__
 							cl::sycl::sqrt(sphereRadius2 - d2);
@@ -296,79 +300,28 @@ public:
 
 					};
 
-					/*auto bIntersected = getIntersections_lambda(
-						cl::sycl::float3(cp.x, cp.y, cp.z),
-						cl::sycl::float3(tcrd.x, tcrd.y, tcrd.z),
-						cl::sycl::float3(sc.x, sc.y, sc.z),
-						sphereRadius2);*/
-
-					/*glm::vec3 l = sphereCenter - camPos;
-					float tca = glm::dot(l, transformedCamRayDir);
-					float d2 = glm::dot(l, l) - tca * tca;*/
+					//bool bIntersected = false;
+					auto bIntersected = getIntersections_lambda(cl::sycl::float3(camPos.x, camPos.y, camPos.z), transformedCamRayDir_sycl, 
+						cl::sycl::float3(sphereCenter.x, sphereCenter.y, sphereCenter.z), sphereRadius2);
 
 					cl::sycl::uchar4 pixelColor;
-					//auto camPosfloat3 = cl::sycl::float3{ rayVec.x, rayVec.y, rayVec.z };
-					//if (index.get(1) % 2 == 0) {
-					//if ((int(glm::length(camPos))) % 2 == 0) {
-					auto length = (int)glm::dot(rayVec, rayVec);
-					//auto length = (int)glm::dot(transformedCamRayDir, transformedCamRayDir) + 1;
-					//auto length = (int)glm::dot(transformedCamRayDir, transformedCamRayDir) + 1;
-					if (length % 2 == 0) {
-					//if (index.get(1) % 2 == 0) {
-					//if ((int(glm::length(camPos))) % 2 == 0) {
-					//if ((int(cl::sycl::length(camPosfloat3))) % 2 == 0) {
-
+					//if (bIntersected && t0 > 0.0 && t1 > 0.0)
+					if (bIntersected)
+					{
 						pixelColor = cl::sycl::uchar4(255, 0, 0, 255);
+						/*pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, t0, t1, deltaS, extent, saturationThreshold,
+							const_cast<DensFunc>densityFunc, const_cast<ColorFunc>(colorFunc));*/
 					}
-					else if (index.get(1) % 3 == 0) {
+					// if we are inside the spehere, we trace from the the ray's original position
+					else if (bIntersected && t1 > 0.0)
+					{
+						//pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, 0.0, t1, deltaS, extent, saturationThreshold, const_cast<DensFunc>(densityFunc), const_cast<ColorFunc>(colorFunc));
 						pixelColor = cl::sycl::uchar4(0, 255, 0, 255);
 					}
-					else if (index.get(1) % 5 == 0) {
+					else
+					{
 						pixelColor = cl::sycl::uchar4(0, 0, 255, 255);
 					}
-					else if (index.get(1) % 7 == 0) {
-						pixelColor = cl::sycl::uchar4(234, 55, 54, 255);
-					}
-					else if (index.get(1) % 11 == 0) {
-						pixelColor = cl::sycl::uchar4(0, 255, 234, 255);
-					}
-					else {
-						pixelColor = cl::sycl::uchar4(0, 0, 0, 255);
-
-					}
-					//bool bIntersected = true;
-					////if ((int(glm::length(camPos))) % 2 == 0)
-					////if ((sphereRadius2 - d2) < 0.0001f)
-					//if (index.get(1) % 2 == 0)
-					//	bIntersected = false;
-
-//					float thc =
-//#ifdef __SYCL_DEVICE_ONLY__
-//						cl::sycl::sqrt(sphereRadius2 - d2);
-//#else
-//						0.f;
-//#endif
-//					t0 = tca - thc;
-//					t1 = tca + thc;
-//
-//					cl::sycl::uchar4 pixelColor;
-//					if (bIntersected)
-//					//if (bIntersected && t0 > 0.0 && t1 > 0.0)
-//					{
-//						pixelColor = cl::sycl::uchar4(255, 0, 0, 255);
-//						/*pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, t0, t1, deltaS, extent, saturationThreshold,
-//							const_cast<DensFunc>densityFunc, const_cast<ColorFunc>(colorFunc));*/
-//					}
-//					// if we are inside the spehere, we trace from the the ray's original position
-//					else if (bIntersected && t1 > 0.0)
-//					{
-//						//pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, 0.0, t1, deltaS, extent, saturationThreshold, const_cast<DensFunc>(densityFunc), const_cast<ColorFunc>(colorFunc));
-//						pixelColor = cl::sycl::uchar4(0, 255, 0, 255);
-//					}
-//					else
-//					{
-//						pixelColor = cl::sycl::uchar4(0, 0, 255, 255);
-//					}
 
 					// seting rgb value for every pixel
 					imageData[index] = pixelColor;	
