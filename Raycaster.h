@@ -182,11 +182,11 @@ public:
 	{
 		try {
 			// Start raymarch lambda
-			auto m_raymarch = [](const glm::vec3& camPos, const glm::vec3& rayDirection, const float startT, const float endT, const float deltaS, const Extent extent, const int saturationThreshold,
+			auto m_raymarch = [](const cl::sycl::float3& camPos, const cl::sycl::float3& rayDirection, const float startT, const float endT, const float deltaS, const Extent extent, const int saturationThreshold,
 				DensFunc densityFunc, ColorFunc colorFunc)
 			{
 				cl::sycl::uchar4 finalColor(0, 0, 0, 0);
-				glm::vec3 location(0.0f, 0.0f, 0.0f);
+				cl::sycl::float3 location(0.0f, 0.0f, 0.0f);
 
 				location = camPos + startT * rayDirection;
 
@@ -199,14 +199,27 @@ public:
 
 					// check if it is inside
 					//if (!IsOutside(location))
-					if ((location.x < extent.m_maxX) && (location.y < extent.m_maxY) && (location.z < extent.m_maxZ) && (location.x > extent.m_minX) && (location.y > extent.m_minY) && (location.z > extent.m_minZ))
+					float x = location.x();
+					float y = location.y();
+					float z = location.z();
+					//if (x < extent.m_maxX)
+					if ((x < extent.m_maxX) && y < (extent.m_maxY) && (z < extent.m_maxZ) && 
+						(x > extent.m_minX) && (y > extent.m_minY) && (z > extent.m_minZ))
 					{
 						// Convert to spherical coordinated
-						float r = sqrt(location.x*location.x + location.y*location.y + location.z*location.z);
-						float theta = acos(location.z / r); //* 180 / M_PI; // convert to degrees?
-						float phi = atan2(location.y, location.x); //* 180 / M_PI;
+						//float r = sqrt(location.x*location.x + location.y*location.y + location.z*location.z);
+						float r =
+#ifdef __SYCL_DEVICE_ONLY__
+							cl::sycl::length(location);
+#else
+						0.f;
+#endif
+						//float r = cl::sycl::length(location);
+						float theta = cl::sycl::acos(location.z() / r); //* 180 / M_PI; // convert to degrees?
+						float phi = cl::sycl::atan2(y, x); //* 180 / M_PI;
 
-						cl::sycl::uchar4 color = colorFunc(1);
+						//cl::sycl::uchar4 color = colorFunc(1.0f);
+						cl::sycl::uchar4 color = colorFunc(densityFunc(r, theta, phi));
 						//QColor color = colorFunc(densityFunc(r, theta, phi));
 
 
@@ -271,8 +284,8 @@ public:
 
 
 					//transformedCamRayDir = glm::normalize(transformedCamRayDir);
-					cl::sycl::float3 transformedCamRayDir_sycl{ transformedCamRayDir.x, transformedCamRayDir.y, transformedCamRayDir.z };
-					transformedCamRayDir_sycl = cl::sycl::normalize(transformedCamRayDir_sycl);
+					cl::sycl::float3 transformedCamRayDirFloat3{ transformedCamRayDir.x, transformedCamRayDir.y, transformedCamRayDir.z };
+					transformedCamRayDirFloat3 = cl::sycl::normalize(transformedCamRayDirFloat3);
 
 					//bool bIntersected = sphere.GetIntersections(cam.GetPosition(), transformedCamRayDir, t0, t1);
 
@@ -300,33 +313,33 @@ public:
 
 					};
 
-					//bool bIntersected = false;
-					auto bIntersected = getIntersections_lambda(cl::sycl::float3(camPos.x, camPos.y, camPos.z), transformedCamRayDir_sycl, 
+					auto camPosFloat3 = cl::sycl::float3(camPos.x, camPos.y, camPos.z);
+					auto bIntersected = getIntersections_lambda(camPosFloat3, transformedCamRayDirFloat3,
 						cl::sycl::float3(sphereCenter.x, sphereCenter.y, sphereCenter.z), sphereRadius2);
 
 					cl::sycl::uchar4 pixelColor;
-					//if (bIntersected && t0 > 0.0 && t1 > 0.0)
-					if (bIntersected)
+					if (bIntersected && t0 > 0.0 && t1 > 0.0)
+					//if (bIntersected)
 					{
-						pixelColor = cl::sycl::uchar4(255, 0, 0, 255);
-						/*pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, t0, t1, deltaS, extent, saturationThreshold,
-							const_cast<DensFunc>densityFunc, const_cast<ColorFunc>(colorFunc));*/
+						//pixelColor = cl::sycl::uchar4(255, 0, 0, 255);
+						pixelColor = raymarch(camPosFloat3, transformedCamRayDirFloat3, t0, t1, deltaS, extent, saturationThreshold,
+							const_cast<DensFunc>(densityFunc), const_cast<ColorFunc>(colorFunc));
 					}
 					// if we are inside the spehere, we trace from the the ray's original position
 					else if (bIntersected && t1 > 0.0)
 					{
-						//pixelColor = raymarch(cam.GetPosition(), transformedCamRayDir, 0.0, t1, deltaS, extent, saturationThreshold, const_cast<DensFunc>(densityFunc), const_cast<ColorFunc>(colorFunc));
-						pixelColor = cl::sycl::uchar4(0, 255, 0, 255);
+						pixelColor = raymarch(camPosFloat3, transformedCamRayDirFloat3, 0.0, t1, deltaS, extent, saturationThreshold,
+							const_cast<DensFunc>(densityFunc), const_cast<ColorFunc>(colorFunc));
+						//pixelColor = cl::sycl::uchar4(0, 255, 0, 255);
 					}
 					else
 					{
-						pixelColor = cl::sycl::uchar4(0, 0, 255, 255);
+						pixelColor = cl::sycl::uchar4(0, 0, 0, 255);
 					}
 
 					// seting rgb value for every pixel
 					imageData[index] = pixelColor;	
 				});
-
 			});
 
 			// copy back is done automatically

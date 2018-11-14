@@ -12,15 +12,15 @@ Camera::Camera(glm::vec3 position, glm::vec3 viewedPos, glm::vec3 viewUp, float 
 	m_fieldOfView = fieldOfView; // in degrees
 
 	// rotation matrix with 10 degree
-	float rotateWithDegree = 10;
+	float rotateWithDegree = glm::radians(10.f);
 	//float rotateWithDegree = 90;
-	/*rotatorAroundXClock.rotate(-rotateWithDegree, 0.1f, 0.0f, 0.0f);
-	rotatorAroundYClock.rotate(-rotateWithDegree, 0.0, 1.0, 0.0);
-	rotatorAroundZClock.rotate(-rotateWithDegree, 0.0, 0.0, 0.1);
+	rotatorAroundXClock = glm::rotate(-rotateWithDegree, glm::vec3(0.1f, 0.0f, 0.0f)); 
+	rotatorAroundYClock = glm::rotate(-rotateWithDegree, glm::vec3(0.0f, 1.0f, 0.0f));
+	rotatorAroundZClock = glm::rotate(-rotateWithDegree, glm::vec3(0.0f, 0.0f, 0.1f));
 
-	rotatorAroundXCClock.rotate(rotateWithDegree, 0.1, 0.0, 0.0);
-	rotatorAroundYCClock.rotate(rotateWithDegree, 0.0, 1.0, 0.0);
-	rotatorAroundZCClock.rotate(rotateWithDegree, 0.0, 0.0, 0.1);*/
+	rotatorAroundXCClock = glm::rotate(rotateWithDegree, glm::vec3(0.1f, 0.0f, 0.0f));
+	rotatorAroundYCClock = glm::rotate(rotateWithDegree, glm::vec3(0.0f, 1.0f, 0.0f));
+	rotatorAroundZCClock = glm::rotate(rotateWithDegree, glm::vec3(0.0f, 0.0f, 0.1f));
 
 }
 
@@ -46,53 +46,53 @@ void Camera::SetPosition(const glm::vec3 &cameraPos)
 
 void Camera::RotateAroundXClock()
 {
-	/*m_position -= m_viewedPosition;
+	m_position -= m_viewedPosition;
 	m_position = rotatorAroundXClock * m_position;
 	m_position += m_viewedPosition;
 
 	m_viewUp = rotatorAroundXClock * m_viewUp;
-	m_viewUp = glm::normalize(m_viewUp);*/
+	m_viewUp = glm::normalize(m_viewUp);
 }
 
 void Camera::RotateAroundXCClock()
 {
-	/*m_position -= m_viewedPosition;
+	m_position -= m_viewedPosition;
 	m_position = rotatorAroundXCClock * m_position;
 	m_position += m_viewedPosition;
 
 	m_viewUp = rotatorAroundXCClock * m_viewUp;
-	m_viewUp = glm::normalize(m_viewUp);*/
+	m_viewUp = glm::normalize(m_viewUp);
 }
 void Camera::RotateAroundYClock()
 {
-	/*m_position -= m_viewedPosition;
+	m_position -= m_viewedPosition;
 	m_position = rotatorAroundYClock * m_position;
 	m_position += m_viewedPosition;
 
 	m_viewUp = rotatorAroundYClock * m_viewUp;
-	m_viewUp = glm::normalize(m_viewUp);*/
+	m_viewUp = glm::normalize(m_viewUp);
 }
 
 void Camera::RotateAroundYCClock()
 {
-	/*m_position -= m_viewedPosition;
+	m_position -= m_viewedPosition;
 	m_position = rotatorAroundYCClock * m_position;
 	m_position += m_viewedPosition;
 
 	m_viewUp = rotatorAroundYCClock * m_viewUp;
-	m_viewUp = glm::normalize(m_viewUp);*/
+	m_viewUp = glm::normalize(m_viewUp);
 }
 
 void Camera::RotateAroundZClock()
 {
-	/*m_position -= m_viewedPosition;
+	m_position -= m_viewedPosition;
 	m_position = rotatorAroundZClock * m_position;
-	m_position += m_viewedPosition;*/
+	m_position += m_viewedPosition;
 }
 
 void Camera::RotateAroundZCClock()
 {
-	/*m_position -= m_viewedPosition;
+	m_position -= m_viewedPosition;
 	m_position = rotatorAroundZCClock * m_position;
-	m_position += m_viewedPosition;*/
+	m_position += m_viewedPosition;
 }
