@@ -38,6 +38,10 @@ int main(int argc, char *argv[])
 			float absVal = 0.0f;
 			if (val < 0)
 				absVal = -val;
+			else
+			{
+				absVal = val;
+			}
 
 			float result = 0.0f;
 			if (2 * absVal - r < 0)
@@ -59,14 +63,14 @@ int main(int argc, char *argv[])
 		{
 			if (density > 0)
 			{
-				return cl::sycl::uchar4(0, 0, 1, 1); // blue
+				return cl::sycl::uchar4(0, 0, 1, 0); // blue
 			}
 			else if (density < 0)
 			{
-				return cl::sycl::uchar4(1, 1, 0, 1); // yellow
+				return cl::sycl::uchar4(1, 1, 0, 0); // yellow
 			}
 			else
-				return  cl::sycl::uchar4(0, 0, 0, 1); // black
+				return  cl::sycl::uchar4(0, 0, 0, 0); // black
 		};
 		QApplication a(argc, argv);
 

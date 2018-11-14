@@ -215,8 +215,8 @@ public:
 						0.f;
 #endif
 						//float r = cl::sycl::length(location);
-						float theta = cl::sycl::acos(location.z() / r); //* 180 / M_PI; // convert to degrees?
-						float phi = cl::sycl::atan2(y, x); //* 180 / M_PI;
+						float theta = cl::sycl::acos(location.z() / r); // *180 / 3.1415926f; // convert to degrees?
+						float phi = cl::sycl::atan2(y, x); // *180 / 3.1415926f;
 
 						//cl::sycl::uchar4 color = colorFunc(1.0f);
 						cl::sycl::uchar4 color = colorFunc(densityFunc(r, theta, phi));
@@ -246,7 +246,7 @@ public:
 
 
 				//cl::sycl::uchar4 colorSycl(finalColor.red(), finalColor.green(), finalColor.blue(), finalColor.alpha());
-				return finalColor;
+				return cl::sycl::uchar4(finalColor.r(), finalColor.g(), finalColor.b(), 255);
 			};
 			// END raymarch lambda
 
