@@ -1,20 +1,32 @@
-#ifndef INCLUDED_SCENE_H
-#define INCLUDED_SCENE_H
+#pragma once
 
-#include <functional>
-//#define _USE_MATH_DEFINES
-//#include <math.h>
-# define M_PI           3.14159265358979323846  /* pi */
-#include <cmath>
+// Raycaster includes
 #include "Sphere.h"
 #include "Camera.h"
+
+// SYCL include
+#ifdef _MSC_VER 
+#pragma warning( push )   
+#pragma warning( disable : 4310 ) /* Prevents warning about cast truncates constant value */
+#pragma warning( disable : 4100 ) /* Prevents warning about unreferenced formal parameter */
+#endif
 #include <CL/sycl.hpp>
+#ifdef _MSC_VER 
+#pragma warning( pop )   
+#endif
+
+// GLM includes
+#include <glm/ext.hpp>
+
+// Standard C++ include
+#include <functional>
 #include <iostream>
 #include <string>
-// GLM includes
-//#include <glm/glm.hpp>
-#include "glm/ext.hpp"
-#include "random"
+#include <random>
+#include <cmath>
+#define M_PI 3.14159265358979323846
+
+
 template <typename DensFunc, typename ColorFunc>
 class Raycaster
 {
@@ -502,5 +514,3 @@ public:
 	Extent m_extent;
 	int m_saturationThreshold;
 };
-
-#endif
