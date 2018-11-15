@@ -69,6 +69,7 @@ void GraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseMoveEvent)
 }
 void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseReleaseEvent)
 {
+    Q_UNUSED(mouseReleaseEvent)
 }
 
 void GraphicsScene::keyPressEvent(QKeyEvent *event)

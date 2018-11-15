@@ -3,17 +3,25 @@
 
 // SYCL include
 #ifdef _MSC_VER 
-#pragma warning( push )   
+#pragma warning( push )
 #pragma warning( disable : 4310 ) /* Prevents warning about cast truncates constant value */
 #pragma warning( disable : 4100 ) /* Prevents warning about unreferenced formal parameter */
 #endif
 #include <CL/sycl.hpp>
 #ifdef _MSC_VER 
-#pragma warning( pop )   
+#pragma warning( pop )
 #endif
 
 // GLM includes
+#ifdef _MSC_VER 
+#pragma warning( push )
+#pragma warning( disable : 4127 ) /* Prevents warning about conditional expression is constant */
+#pragma warning( disable : 4201 ) /* Prevents warning about nonstandard extension used: nameless struct/union */
+#endif
 #include <glm/glm.hpp>
+#ifdef _MSC_VER 
+#pragma warning( pop )
+#endif
 
 // Qt includes
 #include <QCommandLineParser>

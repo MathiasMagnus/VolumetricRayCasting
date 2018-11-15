@@ -16,7 +16,15 @@
 #endif
 
 // GLM includes
+#ifdef _MSC_VER 
+#pragma warning( push )
+#pragma warning( disable : 4127 ) /* Prevents warning about conditional expression is constant */
+#pragma warning( disable : 4201 ) /* Prevents warning about nonstandard extension used: nameless struct/union */
+#endif
 #include <glm/ext.hpp>
+#ifdef _MSC_VER 
+#pragma warning( pop )
+#endif
 
 // Qt includes
 #include <QImage>

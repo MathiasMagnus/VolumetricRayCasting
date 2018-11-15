@@ -7,7 +7,16 @@
 #include "Camera.hpp"
 
 // GLM includes
+#ifdef _MSC_VER 
+#pragma warning( push )
+#pragma warning( disable : 4127 ) /* Prevents warning about conditional expression is constant */
+#pragma warning( disable : 4201 ) /* Prevents warning about nonstandard extension used: nameless struct/union */
+#endif
 #include <glm/gtx/transform.hpp>
+#ifdef _MSC_VER 
+#pragma warning( pop )
+#endif
+
 
 Camera::Camera(glm::vec3 position, glm::vec3 viewedPos, glm::vec3 viewUp, float fieldOfView)
 :m_position(position), m_viewedPosition(viewedPos), m_viewUp(viewUp), m_fieldOfView(fieldOfView)
