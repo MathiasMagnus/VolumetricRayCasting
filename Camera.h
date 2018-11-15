@@ -1,7 +1,7 @@
-#ifndef INCLUDED_CAMERA_H
-#define INCLUDED_CAMERA_H
+#pragma once
 
-#include "glm/ext.hpp"
+// GLM includes
+#include <glm/ext.hpp>
 
 class Camera
 {
@@ -43,5 +43,3 @@ public:
 	glm::mat3 rotatorAroundYCClock;
 	glm::mat3 rotatorAroundZCClock;
 };
-
-#endif

@@ -1,11 +1,15 @@
-#ifndef VolumetricRayCasting_H
-#define VolumetricRayCasting_H
+#pragma once
 
+// Raycaster includes
+#include "GraphicsScene.h"
+
+// Qt includes
 #include <QtWidgets/QMainWindow>
-#include "ui_VolumetricRayCasting.h"
 #include <QGraphicsView>
 
-#include "GraphicsScene.h"
+// Generated headers
+#include "ui_VolumetricRayCasting.h"
+
 
 class MainWindow : public QMainWindow
 {
@@ -29,5 +33,3 @@ private:
 	QGraphicsView * view;
 	GraphicsScene * m_graphicsScene;
 };
-
-#endif // VolumetricRayCasting_H

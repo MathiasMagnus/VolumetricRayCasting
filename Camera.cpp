@@ -1,6 +1,14 @@
+// Behavioral defines
+//
+// GLM
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/transform.hpp>
+
+// Raycaster includes
 #include "Camera.h"
+
+// GLM includes
+#include <glm/gtx/transform.hpp>
+
 Camera::Camera(glm::vec3 position, glm::vec3 viewedPos, glm::vec3 viewUp, float fieldOfView)
 :m_position(position), m_viewedPosition(viewedPos), m_viewUp(viewUp), m_fieldOfView(fieldOfView)
 {

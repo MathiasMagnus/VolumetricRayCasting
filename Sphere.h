@@ -1,13 +1,19 @@
-#ifndef INCLUDED_SPHERE_H
-#define INCLUDED_SPHERE_H
+#pragma once
 
+// GLM includes
 #include <glm/glm.hpp>
 
 class Sphere
 {
 public:
-	Sphere();
-	Sphere(glm::vec3 center, float radius, float density, glm::vec3 color);
+	Sphere() = default;
+	Sphere(glm::vec3 center, float radius, float density, glm::vec3 color)
+        : m_center(center)
+        , m_radius(radius)
+        , m_radius2(m_radius * m_radius)
+        , m_density(density)
+        , m_color(color)
+    {}
 
 	glm::vec3 GetCenter() { return m_center; }
 	void SetCenter(glm::vec3 center) { m_center = center;}
@@ -40,5 +46,3 @@ public:
 	glm::vec3 m_color;
 
 };
-
-#endif

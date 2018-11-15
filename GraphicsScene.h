@@ -1,13 +1,15 @@
 #pragma once
 
+// Raycaster includes
+#include "Raycaster.h"
+
+// Qt includes
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>
 #include <QGraphicsPixmapItem>
 #include <QKeyEvent>
 
-
-#include "Raycaster.h"
 
 class GraphicsScene : public QGraphicsScene
 {
