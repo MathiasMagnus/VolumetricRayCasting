@@ -17,6 +17,7 @@
 
 // Qt includes
 #include <QCommandLineParser>
+#include <QApplication>
 
 // Standard C++ includes
 #include <fstream>
