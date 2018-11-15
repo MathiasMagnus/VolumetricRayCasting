@@ -1,5 +1,5 @@
 // Raycaster includes
-#include "GraphicsScene.h"
+#include "GraphicsScene.hpp"
 
 
 GraphicsScene::GraphicsScene(QObject *parent) :

@@ -1,7 +1,7 @@
 #pragma once
 
 // Raycaster includes
-#include "GraphicsScene.h"
+#include "GraphicsScene.hpp"
 
 // Qt includes
 #include <QtWidgets/QMainWindow>

@@ -1,5 +1,5 @@
 // Raycaster includes
-#include "MainWindow.h"
+#include "MainWindow.hpp"
 
 // SYCL include
 #ifdef _MSC_VER 
@@ -24,8 +24,10 @@
 #include <iostream>
 #include <array>
 
-template <typename D, typename C>
-auto make_RayCaster(D&& d, C&& c, size_t plat_id, cl::sycl::info::device_type device_type) { return Raycaster<D, C>(std::forward<D>(d), std::forward<C>(c), plat_id, device_type); }
+struct SphericalHarmonicVisualizer;
+
+template <typename K, typename D, typename C>
+auto make_RayCaster(D&& d, C&& c, size_t plat_id, cl::sycl::info::device_type device_type) { return Raycaster<K, D, C>(std::forward<D>(d), std::forward<C>(c), plat_id, device_type); }
 
 int main(int argc, char *argv[])
 {
@@ -115,7 +117,7 @@ int main(int argc, char *argv[])
 		// extent definition
 		std::array<std::array<float, 2>, 3 > extent = { { { -1.0, 1.0 },{ -1.0, 1.0 },{ -1.0, 1.0 } } };
 
-		auto rayCaster = make_RayCaster(densFunction, colorFunction, plat_id, dev_type);
+		auto rayCaster = make_RayCaster<SphericalHarmonicVisualizer>(densFunction, colorFunction, plat_id, dev_type);
 		rayCaster.SetLimits(extent);
 
 		MainWindow w;

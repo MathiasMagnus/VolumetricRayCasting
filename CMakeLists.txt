@@ -33,4 +33,4 @@ add_executable(vrwithcmake main.cpp MainWindow.cpp Camera.cpp GraphicsScene.cpp 
 # Add the Qt5 Widgets for linking
 target_link_libraries(vrwithcmake PRIVATE Qt5::Widgets Qt5::WinMain glm)
 
-add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp Sphere.h)
+add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp Sphere.hpp)

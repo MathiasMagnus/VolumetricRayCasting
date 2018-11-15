@@ -1,8 +1,8 @@
 #pragma once
 
 // Raycaster includes
-#include "Sphere.h"
-#include "Camera.h"
+#include "Sphere.hpp"
+#include "Camera.hpp"
 
 // SYCL include
 #ifdef _MSC_VER 
@@ -18,6 +18,9 @@
 // GLM includes
 #include <glm/ext.hpp>
 
+// Qt includes
+#include <QImage>
+
 // Standard C++ include
 #include <functional>
 #include <iostream>
@@ -27,7 +30,7 @@
 #define M_PI 3.14159265358979323846
 
 
-template <typename DensFunc, typename ColorFunc>
+template <typename KernelName, typename DensFunc, typename ColorFunc>
 class Raycaster
 {
 public:
@@ -277,7 +280,7 @@ public:
 			cl::sycl::buffer < cl::sycl::uchar4, 2> resultBuff{ reinterpret_cast<cl::sycl::uchar4*>(inImage.bits()), cl::sycl::range<2> {imageHeight, imageWidth} };
 			myQueue.submit([&](cl::sycl::handler& cgh) {
 				auto imageData = resultBuff.get_access <cl::sycl::access::mode::write>(cgh);
-				cgh.parallel_for<class raycast>(cl::sycl::range<2> {imageHeight, imageWidth}, [=,
+				cgh.parallel_for<KernelName>(cl::sycl::range<2> {imageHeight, imageWidth}, [=,
 					ViewToWorldMtx = m_ViewToWorldMtx,
 					camPos = camera.GetPosition(), raymarch = m_raymarch, deltaS = m_deltaS, extent = m_extent, densityFunc = m_densityFunc, colorFunc = m_colorFunc,
 					saturationThreshold = m_saturationThreshold,

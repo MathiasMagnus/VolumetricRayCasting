@@ -4,7 +4,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 
 // Raycaster includes
-#include "Camera.h"
+#include "Camera.hpp"
 
 // GLM includes
 #include <glm/gtx/transform.hpp>

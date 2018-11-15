@@ -1,5 +1,5 @@
 // Raycaster includes
-#include "mainwindow.h"
+#include "mainwindow.hpp"
 
 
 MainWindow::MainWindow(QWidget *parent)
