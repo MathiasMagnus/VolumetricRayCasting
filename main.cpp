@@ -1,13 +1,27 @@
+// Raycaster includes
+#include "MainWindow.h"
+
 // SYCL include
+#ifdef _MSC_VER 
+#pragma warning( push )   
+#pragma warning( disable : 4310 ) /* Prevents warning about cast truncates constant value */
+#pragma warning( disable : 4100 ) /* Prevents warning about unreferenced formal parameter */
+#endif
 #include <CL/sycl.hpp>
+#ifdef _MSC_VER 
+#pragma warning( pop )   
+#endif
+
+// GLM includes
 #include <glm/glm.hpp>
+
+// Qt includes
+#include <QCommandLineParser>
+
+// Standard C++ includes
 #include <fstream>
 #include <iostream>
 #include <array>
-#include <QCommandLineParser>
-
-#include "MainWindow.h"
-
 
 template <typename D, typename C>
 auto make_RayCaster(D&& d, C&& c, size_t plat_id, cl::sycl::info::device_type device_type) { return Raycaster<D, C>(std::forward<D>(d), std::forward<C>(c), plat_id, device_type); }
