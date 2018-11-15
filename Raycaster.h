@@ -208,15 +208,15 @@ public:
 					{
 						// Convert to spherical coordinated
 						//float r = sqrt(location.x*location.x + location.y*location.y + location.z*location.z);
-						float r =
 #ifdef __SYCL_DEVICE_ONLY__
-							cl::sycl::length(location);
+                        float r = cl::sycl::length(location);
+                        float theta = cl::sycl::acos(location.z() / r); // *180 / 3.1415926f; // convert to degrees?
+                        float phi = cl::sycl::atan2(y, x); // *180 / 3.1415926f;
 #else
-						0.f;
+                        float r = 0.f;
+                        float theta = 0.f;
+                        float phi = 0.f;
 #endif
-						//float r = cl::sycl::length(location);
-						float theta = cl::sycl::acos(location.z() / r); // *180 / 3.1415926f; // convert to degrees?
-						float phi = cl::sycl::atan2(y, x); // *180 / 3.1415926f;
 
 						//cl::sycl::uchar4 color = colorFunc(1.0f);
 						cl::sycl::uchar4 color = colorFunc(densityFunc(r, theta, phi));
@@ -263,7 +263,6 @@ public:
 			auto myQueue = getQueue();
 			constexpr auto ss = sizeof(cl::sycl::vec < unsigned char, 3 >);
 			cl::sycl::buffer < cl::sycl::uchar4, 2> resultBuff{ reinterpret_cast<cl::sycl::uchar4*>(inImage.bits()), cl::sycl::range<2> {imageHeight, imageWidth} };
-			//cl::sycl::buffer < cl::sycl::vec < unsigned char, 4 >, 2> resultBuff{ reinterpret_cast<cl::sycl::vec < unsigned char, 4 >*>(inImage.bits()), cl::sycl::range<2> {imageHeight, imageWidth} };
 			myQueue.submit([&](cl::sycl::handler& cgh) {
 				auto imageData = resultBuff.get_access <cl::sycl::access::mode::write>(cgh);
 				cgh.parallel_for<class raycast>(cl::sycl::range<2> {imageHeight, imageWidth}, [=,
@@ -281,11 +280,11 @@ public:
 					float t1 = -1E+36;
 					
 					glm::vec3 transformedCamRayDir = glm::vec3(ViewToWorldMtx * rayVec) - camPos;
-
-
-					//transformedCamRayDir = glm::normalize(transformedCamRayDir);
-					cl::sycl::float3 transformedCamRayDirFloat3{ transformedCamRayDir.x, transformedCamRayDir.y, transformedCamRayDir.z };
-					transformedCamRayDirFloat3 = cl::sycl::normalize(transformedCamRayDirFloat3);
+#ifdef __SYCL_DEVICE_ONLY__
+					cl::sycl::float3 transformedCamRayDirFloat3 = cl::sycl::normalize(cl::sycl::float3{ transformedCamRayDir.x, transformedCamRayDir.y, transformedCamRayDir.z });
+#else
+                    cl::sycl::float3 transformedCamRayDirFloat3;
+#endif
 
 					//bool bIntersected = sphere.GetIntersections(cam.GetPosition(), transformedCamRayDir, t0, t1);
 
@@ -300,11 +299,10 @@ public:
 							isIntersected = false;
 
 						}
-						float thc =
 #ifdef __SYCL_DEVICE_ONLY__
-							cl::sycl::sqrt(sphereRadius2 - d2);
+                        float thc = cl::sycl::sqrt(sphereRadius2 - d2);
 #else
-							0.f;
+                        float thc = 0.f;
 #endif
 						t0 = tca - thc;
 						t1 = tca + thc;

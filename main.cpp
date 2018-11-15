@@ -26,33 +26,16 @@ int main(int argc, char *argv[])
 		// density function(spherical harminics) inside the extent
 		auto densFunction = [](const float& r, const float& theta, const float& phi)
 		{
-
-			
-			float sqrt3fpi =
 #ifdef __SYCL_DEVICE_ONLY__
-				cl::sycl::sqrt(3.0f / M_PI);
+            float sqrt3fpi = cl::sycl::sqrt(3.0f / M_PI);
+            float val = 1.0f / 2.0f * sqrt3fpi * cl::sycl::cos(theta); // Y(l = 1, m = 0)
+            float result = cl::sycl::fabs(2 * cl::sycl::fabs(val) - r);
 #else
-				1.0f;
+            float sqrt3fpi = 1.0f;
+            float val = 1.0f;
+            float result = 1.0f;
 #endif
-			float val = 1.0f / 2.0f * sqrt3fpi * cl::sycl::cos(theta); // Y(l = 1, m = 0)
-			float absVal = 0.0f;
-			if (val < 0)
-				absVal = -val;
-			else
-			{
-				absVal = val;
-			}
-
-			float result = 0.0f;
-			if (2 * absVal - r < 0)
-				result = -1 * (2 * absVal - r);
-			else
-			{
-				result = 2 * absVal - r;
-			}
-
-			if (result < 0.01f)	// thickness of shell 
-			//if (abs(2 * abs(val) - r) < 0.01f)	// thickness of shell 
+            if (result < 0.01f)	// thickness of shell 
 				return val < 0 ? -1 : 1;
 			else
 				return 0;
