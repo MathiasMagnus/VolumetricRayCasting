@@ -31,17 +31,11 @@ auto make_RayCaster(D&& d, C&& c, size_t plat_id, cl::sycl::info::device_type de
 
 int main(int argc, char *argv[])
 {
-	// Sample params
-	const std::size_t plat_index = std::numeric_limits<std::size_t>::max();
-	const std::size_t dev_index = std::numeric_limits<std::size_t>::max();
-	const auto dev_type = cl::sycl::info::device_type::gpu;
-	const std::size_t length = 4096u;
-
 	try
 	{
 		// example lambda functions that could be given by the user
 		// density function(spherical harminics) inside the extent
-		auto densFunction = [](const float& r, const float& theta, const float& phi)
+		auto densFunction = [](const float& r, const float& theta, const float& /*phi*/)
 		{
 #ifdef __SYCL_DEVICE_ONLY__
             float sqrt3fpi = cl::sycl::sqrt(3.0f / M_PI);
@@ -51,6 +45,10 @@ int main(int argc, char *argv[])
             float sqrt3fpi = 1.0f;
             float val = 1.0f;
             float result = 1.0f;
+
+            (void)sqrt3fpi;
+            (void)r;
+            (void)theta;
 #endif
             if (result < 0.01f)	// thickness of shell 
 				return val < 0 ? -1 : 1;
@@ -86,8 +84,8 @@ int main(int argc, char *argv[])
 
 		parser.process(a);
 
-		cl::sycl::info::device_type dev_type;
-		std::size_t plat_id, count;
+		cl::sycl::info::device_type dev_type = cl::sycl::info::device_type::automatic;
+		std::size_t plat_id = 0;
 		if (!parser.value("device").isEmpty())
 		{
 			if (parser.value("device") == "cpu")
@@ -103,15 +101,9 @@ int main(int argc, char *argv[])
 				qFatal("NBody: Invalid device type: valid values are [cpu|gpu|acc]. Using CL_DEVICE_TYPE_DEFAULT instead.");
 			}
 		}
-		else dev_type = cl::sycl::info::device_type::automatic;
 		if (!parser.value("platformId").isEmpty())
 		{
 			plat_id = parser.value("platformId").toULong();
-		}
-		else plat_id = 0;
-		if (!parser.value("particles").isEmpty())
-		{
-			count = parser.value("particles").toULong();
 		}
 		
 		// extent definition

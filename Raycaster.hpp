@@ -291,8 +291,8 @@ public:
 						(1 - 2 * (index[0] + 0.5f) / (float)imageHeight) * scaleFOV,
 						-1.0f, 1.0f); // ADDED 4th element 1.0f to support 4x4 matrix multiplication
 
-					float t0 = -1E+36;
-					float t1 = -1E+36;
+					float t0 = -1E+36f;
+					float t1 = -1E+36f;
 					
 					glm::vec3 transformedCamRayDir = glm::vec3(ViewToWorldMtx * rayVec) - camPos;
 #ifdef __SYCL_DEVICE_ONLY__
